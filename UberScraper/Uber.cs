@@ -15,15 +15,20 @@
     using Librainian.Internet;
     using Librainian.Magic;
     using Librainian.Maths;
+    using Librainian.Parsing;
     using Librainian.Persistence;
     using Librainian.Threading;
     using MarkupSanitizer;
+    using Tidy.Core;
 
     public class Uber : IUber {
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
         private readonly ConcurrentDictionary<Object, DateTime> _otherObjects = new ConcurrentDictionary<Object, DateTime>();
 
-        public CancellationTokenSource CancellationTokenSource { get; private set; }
+        public CancellationTokenSource CancellationTokenSource {
+            get;
+            private set;
+        }
 
         private WebControl _webBrowser;
 
@@ -34,7 +39,10 @@
             this.CancellationTokenSource = new CancellationTokenSource();
         }
 
-        public SynchronizationContext AwesomiumContext { get; set; }
+        public SynchronizationContext AwesomiumContext {
+            get;
+            set;
+        }
 
         public Boolean HasWebSitesBeenLoaded {
             get;
@@ -61,9 +69,9 @@
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose() {
-            var before = GC.GetTotalMemory(true);
+            var before = GC.GetTotalMemory( true );
             _otherObjects.Clear();
-            var after = GC.GetTotalMemory(false);
+            var after = GC.GetTotalMemory( false );
             var difference = before - after;
 
             foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
@@ -102,15 +110,37 @@
 
         [CanBeNull]
         public String GetBrowserHTMLCleaned() {
-            var html = this.GetBrowserHTML();
+            var badhtml = this.GetBrowserHTML();
+            if ( null == badhtml ) {
+                return null;
+            }
 
-            var bob = Sanitizer.SanitizeMarkup( html );
 
-            //var bob = new StringWriter();
-            //bob.Write( html  );
-            //var reader = Html2Xhtml.RunAsFilter( writer => { }, dosEndOfLine: true );
-            var newhtml = bob.ToString();
-            return html;
+            var dan = new Tidy();
+            dan.Options.DocType = DocType.Strict;
+            dan.Options.DropEmptyParas = false;
+            dan.Options.DropFontTags = false;
+            dan.Options.FixComments = true;
+            dan.Options.FixBackslash = true;
+            dan.Options.MakeClean = true;
+            dan.Options.SmartIndent = true;
+            dan.Options.Xhtml = true;
+
+            var tidyMessageCollection = new TidyMessageCollection();
+            var newhtml = dan.Parse( badhtml, tidyMessageCollection );
+
+            return newhtml;
+
+
+            //var bob =new SanitizedMarkup( html, false );
+
+            //    //. Sanitizer.SanitizeMarkup( html );
+
+            ////var bob = new StringWriter();
+            ////bob.Write( html  );
+            ////var reader = Html2Xhtml.RunAsFilter( writer => { }, dosEndOfLine: true );
+            //var newhtml = bob.ToString();
+            //return html;
         }
 
         public Boolean LoadWebsites() {

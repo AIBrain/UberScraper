@@ -118,6 +118,9 @@
     <Reference Include="TathamOddie.MarkupSanitizer">
       <HintPath>..\packages\MarkupSanitizer.1.0.0.1\lib\net35\TathamOddie.MarkupSanitizer.dll</HintPath>
     </Reference>
+    <Reference Include="TidyNetPortable">
+      <HintPath>..\packages\TidyNetPortable.1.0.0\lib\TidyNetPortable.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IUber.cs" />
