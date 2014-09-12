@@ -2,6 +2,8 @@
 using System.Windows.Forms;
 
 namespace UberScraper {
+    using Librainian.Magic;
+
     static class Program {
         /// <summary>
         /// The main entry point for the application.
@@ -10,7 +12,11 @@ namespace UberScraper {
         static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault( false );
-            Application.Run( new MainForm() );
+
+            using ( var mainForm = Ioc.Container.TryGet<MainForm>() ) {
+                Application.Run( mainForm );
+            }
+
         }
     }
 }
