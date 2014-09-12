@@ -10,7 +10,7 @@
     /// <summary>
     /// <para>Interface for the <see cref="Uber"/> class.</para>
     /// </summary>
-    public interface IUber {
+    public interface IUber : IDisposable {
         Task<Boolean> Start();
 
         Boolean LoadWebsites();
@@ -21,14 +21,25 @@
         [CanBeNull]
         private PersistTable<String, WebSite> _webSites;
 
-        private Boolean _webSitesLoaded;
+        public Boolean HasWebSitesBeenLoaded {
+            get;
+            private set;
+        }
 
+        /// <summary>
+        /// <para>Load dictionaries.</para>
+        /// </summary>
+        /// <returns></returns>
         public async Task<Boolean> Start() {
 
+            return await this.LoadDictionaries();
+        }
 
-            this._webSitesLoaded = await Task.Run( () => this.LoadWebsites() );
-
-            return true;
+        private async Task<Boolean> LoadDictionaries() {
+            if ( !this.HasWebSitesBeenLoaded ) {
+                this.HasWebSitesBeenLoaded = await Task.Run( () => this.LoadWebsites() );
+            }
+            return this.HasWebSitesBeenLoaded;
         }
 
         public Boolean LoadWebsites() {
@@ -54,6 +65,16 @@
             }
 
             return null != this._webSites;
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose() {
+            var webSites = this._webSites;
+            if ( null != webSites ) {
+                webSites.Dispose();
+            }
         }
     }
 }
