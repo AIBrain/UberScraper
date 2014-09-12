@@ -1,4 +1,5 @@
 ﻿namespace UberScraper {
+
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics;
@@ -19,8 +20,113 @@
     using MarkupSanitizer;
 
     public class Uber : IUber {
-
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
+
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        private WebControl _webBrowser;
+
+        [CanBeNull]
+        private PersistTable<String, WebSite> _webSites;
+
+        public Boolean HasWebSitesBeenLoaded {
+            get;
+            private set;
+        }
+
+        public WebControl WebBrowser {
+            get {
+                return this._webBrowser;
+            }
+
+            set {
+                if ( value == null ) {
+                    return;
+                }
+                this._webBrowser = value;
+                this._webBrowser.LoadingFrameComplete += ( sender, args ) => {
+                };
+                this._autoDisposables.TryAdd( value, DateTime.Now );
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose() {
+            foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
+                try {
+                    Report.Before( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
+                    disposable.Key.Dispose();
+                    Report.After( String.Format( "Disposed.", disposable.Key.ToString() ) );
+                }
+                catch ( Exception exception ) {
+                    exception.Error();
+                }
+            }
+        }
+
+        [CanBeNull]
+        public String GetBrowserHTML() {
+            try {
+                var browser = this.WebBrowser;
+                if ( browser != null ) {
+                    return browser.HTML;
+                }
+
+                //TODO check for non - "http status of 200 OK"
+                //var result = this.Browser.Invoke( new Func<string>( () => {
+                //    var javascriptWithResult = this.Browser.ExecuteJavascriptWithResult( "document.getElementsByTagName('html')[0].innerText" );
+                //    return !javascriptWithResult.IsString ? String.Empty : javascriptWithResult.ToString();
+                //} ) );
+
+                //return result as String;
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return null;
+        }
+
+        [CanBeNull]
+        public String GetBrowserHTMLCleaned() {
+            var html = this.GetBrowserHTML();
+
+            var bob = Sanitizer.SanitizeMarkup( html );
+
+            //var bob = new StringWriter();
+            //bob.Write( html  );
+            //var reader = Html2Xhtml.RunAsFilter( writer => { }, dosEndOfLine: true );
+            var newhtml = bob.ToString();
+            return html;
+        }
+
+        public Boolean LoadWebsites() {
+            try {
+                Report.Enter();
+                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
+                if ( null != this._webSites ) {
+                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
+                }
+            }
+            catch ( InvalidOperationException ) {
+                return false;
+            }
+            catch ( PathTooLongException ) {
+                return false;
+            }
+            catch ( DirectoryNotFoundException ) {
+                return false;
+            }
+            catch ( FileNotFoundException ) {
+                return false;
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return null != this._webSites;
+        }
 
         /// <summary>
         /// <para>Starts a <see cref="Task"/> to navigate to the specified <paramref name="uri"/>.</para>
@@ -82,50 +188,8 @@
             return false;
         }
 
-        [CanBeNull]
-        public String GetBrowserHTML() {
-            try {
-                var browser = this.WebBrowser;
-                if ( browser != null ) {
-                    return browser.HTML;
-                }
-
-                //TODO check for non - "http status of 200 OK"
-                //var result = this.Browser.Invoke( new Func<string>( () => {
-                //    var javascriptWithResult = this.Browser.ExecuteJavascriptWithResult( "document.getElementsByTagName('html')[0].innerText" );
-                //    return !javascriptWithResult.IsString ? String.Empty : javascriptWithResult.ToString();
-                //} ) );
-
-                //return result as String;
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return null;
-        }
-
-        [ CanBeNull ]
-        public String GetBrowserHTMLCleaned() {
-            var html = this.GetBrowserHTML();
-
-            var bob = Sanitizer.SanitizeMarkup( html );
-
-            //var bob = new StringWriter();
-            //bob.Write( html  );
-            //var reader = Html2Xhtml.RunAsFilter( writer => { }, dosEndOfLine: true );
-            var newhtml = bob.ToString();
-            return html;
-        }
-
-        [CanBeNull]
-        private PersistTable<String, WebSite> _webSites;
-
-        private WebControl _webBrowser;
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        public Boolean HasWebSitesBeenLoaded {
-            get;
-            private set;
+        public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
+            this.WebBrowser = webBrowser;
         }
 
         /// <summary>
@@ -153,78 +217,6 @@
             return tasks.IsYesWinning();
         }
 
-        private async Task<Boolean> LoadDictionaries() {
-            if ( !this.HasWebSitesBeenLoaded ) {
-                this.HasWebSitesBeenLoaded = await Task.Run( () => this.LoadWebsites() );
-            }
-            return this.HasWebSitesBeenLoaded;
-        }
-
-        public Boolean LoadWebsites() {
-
-            try {
-                Report.Enter();
-                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
-                if ( null != this._webSites ) {
-                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
-                }
-            }
-            catch ( InvalidOperationException ) {
-                return false;
-            }
-            catch ( PathTooLongException ) {
-                return false;
-            }
-            catch ( DirectoryNotFoundException ) {
-                return false;
-            }
-            catch ( FileNotFoundException ) {
-                return false;
-            }
-            finally {
-                Report.Exit();
-            }
-
-            return null != this._webSites;
-        }
-
-        public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
-            this.WebBrowser = webBrowser;
-
-        }
-
-        public WebControl WebBrowser {
-            get {
-                return this._webBrowser;
-            }
-            set {
-                if ( value == null ) {
-                    return;
-                }
-                this._webBrowser = value;
-                this._webBrowser.LoadingFrameComplete += ( sender, args ) => {
-                };
-                this._autoDisposables.TryAdd( value, DateTime.Now );
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose() {
-            foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
-                try {
-                    Report.Before( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
-                    disposable.Key.Dispose();
-                    Report.After( String.Format( "Disposed.", disposable.Key.ToString() ) );
-                }
-                catch ( Exception exception ) {
-                    exception.Error();
-                }
-            }
-
-        }
-
         public void Stop() {
             try {
                 this._cancellationTokenSource.Cancel();
@@ -233,6 +225,13 @@
             finally {
                 this.Dispose();
             }
+        }
+
+        private async Task<Boolean> LoadDictionaries() {
+            if ( !this.HasWebSitesBeenLoaded ) {
+                this.HasWebSitesBeenLoaded = await Task.Run( () => this.LoadWebsites() );
+            }
+            return this.HasWebSitesBeenLoaded;
         }
     }
 }
