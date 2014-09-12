@@ -21,13 +21,20 @@
 
     public class Uber : IUber {
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
+        private readonly ConcurrentDictionary<Object, DateTime> _otherObjects = new ConcurrentDictionary<Object, DateTime>();
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        public CancellationTokenSource CancellationTokenSource { get; private set; }
 
         private WebControl _webBrowser;
 
         [CanBeNull]
         private PersistTable<String, WebSite> _webSites;
+
+        public Uber() {
+            this.CancellationTokenSource = new CancellationTokenSource();
+        }
+
+        public SynchronizationContext AwesomiumContext { get; set; }
 
         public Boolean HasWebSitesBeenLoaded {
             get;
@@ -54,6 +61,11 @@
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose() {
+            var before = GC.GetTotalMemory(true);
+            _otherObjects.Clear();
+            var after = GC.GetTotalMemory(false);
+            var difference = before - after;
+
             foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                 try {
                     Report.Before( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
@@ -171,7 +183,7 @@
                     this.WebBrowser.Source = uri;
 
                     while ( this.WebBrowser.IsLoading || this.WebBrowser.IsNavigating ) {
-                        if ( _cancellationTokenSource.IsCancellationRequested ) {
+                        if ( this.CancellationTokenSource.IsCancellationRequested ) {
                             break;
                         }
                         WebCore.Update();
@@ -197,7 +209,7 @@
         /// </summary>
         /// <returns></returns>
         public async Task<Boolean> Start() {
-            if ( _cancellationTokenSource.IsCancellationRequested ) {
+            if ( this.CancellationTokenSource.IsCancellationRequested ) {
                 return false;
             }
 
@@ -219,7 +231,7 @@
 
         public void Stop() {
             try {
-                this._cancellationTokenSource.Cancel();
+                this.CancellationTokenSource.Cancel();
                 this.WebBrowser.Stop();
             }
             finally {
@@ -232,6 +244,10 @@
                 this.HasWebSitesBeenLoaded = await Task.Run( () => this.LoadWebsites() );
             }
             return this.HasWebSitesBeenLoaded;
+        }
+
+        public void Remember<TKey>( TKey key ) {
+            this._otherObjects.TryAdd( key, DateTime.Now );
         }
     }
 }
