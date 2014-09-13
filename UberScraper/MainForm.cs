@@ -11,8 +11,22 @@ namespace UberScraper {
     using Librainian.Threading;
 
     public partial class MainForm : Form {
+
+        public SynchronizationContext AwesomiumContext {
+            get;
+            private set;
+        }
+
         public MainForm() {
             this.InitializeComponent();
+
+            var awesomiumThread = new Thread( () => {
+                WebCore.Started += ( s, e ) => {
+                    this.AwesomiumContext = SynchronizationContext.Current;
+                };
+
+                WebCore.Run();
+            } );
         }
 
         [CanBeNull]
@@ -48,16 +62,7 @@ namespace UberScraper {
                 return;
             }
             await uber.Start();
-#if DEBUG
-            await uber.Navigate( "http://www.codegeek.net/flash-version.php" );
-            
-            //await uber.Navigate( "http://www.google.com/" );
-
-            var bob = uber.GetBrowserHTMLCleaned();
-
-            //await uber.Navigate( "http://freedoge.co.in/?op=home" );
-
-#endif
+            await Task.Run( () => uber.VisitSites() );
         }
 
         private void Awesomium_Windows_Forms_WebControl_AddressChanged( object sender, UrlEventArgs e ) {
