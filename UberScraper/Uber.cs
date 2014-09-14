@@ -14,6 +14,7 @@
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
     using CsQuery;
+    using FluentAssertions;
     using Librainian;
     using Librainian.Annotations;
     using Librainian.Internet;
@@ -31,14 +32,15 @@
 
         private WebControl _webBrowser;
 
-        [CanBeNull]
+        [NotNull]
         private PersistTable<String, WebSite> _webSites;
-        [CanBeNull]
-        private PersistTable<String, CaptchaSite> _captchaSites;
+
+        [NotNull]
+        private PersistTable<String, Captcha> _captchas;
 
         public Uber() {
             this.CancellationTokenSource = new CancellationTokenSource();
-            this.NavigationTimeout = Seconds.Ten;
+            this.NavigationTimeout = Seconds.Thirty;
         }
 
         public SynchronizationContext AwesomiumContext {
@@ -78,20 +80,28 @@
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose() {
-            var before = GC.GetTotalMemory( true );
-            _otherObjects.Clear();
-            var after = GC.GetTotalMemory( false );
-            var difference = before - after;
+            try {
+                Report.Enter();
 
-            foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
-                try {
-                    Report.Before( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
-                    disposable.Key.Dispose();
-                    Report.After( String.Format( "Disposed.", disposable.Key.ToString() ) );
+                var before = GC.GetTotalMemory( true );
+                _otherObjects.Clear();
+                var after = GC.GetTotalMemory( false );
+                var difference = before - after;
+
+                foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
+                    try {
+                        Report.Before( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
+                        disposable.Key.Dispose();
+                        Report.After( String.Format( "Disposed.", disposable.Key.ToString() ) );
+                    }
+                    catch ( Exception exception ) {
+                        exception.Error();
+                    }
                 }
-                catch ( Exception exception ) {
-                    exception.Error();
-                }
+
+            }
+            finally {
+                Report.Exit();
             }
         }
 
@@ -108,6 +118,25 @@
                 exception.Error();
             }
             return null;
+        }
+
+        /// <summary>
+        /// Retrieve the <see cref="Uri"/> the <see cref="WebBrowser"/> is currently at.
+        /// </summary>
+        /// <returns></returns>
+        [NotNull]
+        public Uri GetBrowserLocation() {
+            try {
+                var browser = this.WebBrowser;
+                if ( browser != null ) {
+                    var result = browser.Invoke( new Func<Uri>( () => browser.Source ) );
+                    return ( Uri )result;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return new Uri( "about:blank" );
         }
 
         /// <summary>
@@ -271,10 +300,10 @@
             try {
                 Report.Enter();
 
-                this._captchaSites = new PersistTable<String, CaptchaSite>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
+                this._captchas = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
 
-                if ( null != this._captchaSites ) {
-                    this._autoDisposables.TryAdd( this._captchaSites, DateTime.Now );
+                if ( null != this._captchas ) {
+                    this._autoDisposables.TryAdd( this._captchas, DateTime.Now );
                 }
             }
             catch ( InvalidOperationException ) {
@@ -293,7 +322,7 @@
                 Report.Exit();
             }
 
-            return null != this._captchaSites;
+            return null != this._captchas;
         }
 
         /// <summary>
@@ -308,7 +337,7 @@
         }
 
         /// <summary>
-        /// <para>Starts a <see cref="Task"/> to navigate to the specified <paramref name="uri"/>.</para>
+        /// <para>Starts a <see cref="Task"/> to navigate to the specified <paramref name="uriString"/>.</para>
         /// </summary>
         /// <param name="uriString"></param>
         /// <returns></returns>
@@ -341,7 +370,7 @@
                     webBrowser.Invoke( method: new Action( () => {
                         Report.Before( String.Format( "Navigating to {0}...", uri ) );
                         if ( HasWebSitesBeenLoaded ) {
-
+                            this.UpdateWebsite( uri,
                         }
                         this._webSites[ uri.PathAndQuery ] = new WebSite {
                             Location = uri
@@ -458,6 +487,37 @@
             return this.HasWebSitesBeenLoaded && this.HasCaptchasBeenLoaded;
         }
 
+        public void EnsureWebsite( [CanBeNull] Uri uri ) {
+            if ( null == uri ) {
+                return;
+            }
+
+            this._webSites.Should().NotBeNull();
+
+            if ( null == this._webSites[ uri.PathAndQuery ] ) {
+                this._webSites[ uri.PathAndQuery ] = new WebSite();
+            }
+            this._webSites[ uri.PathAndQuery ].Location = uri;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Captcha"/> object, but I do not understand yet if it will reflect back to the object in the dictionary.. must test.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        [NotNull]
+        public Captcha EnsureCaptcha( [NotNull] Uri uri ) {
+            if ( null == this._captchas[ uri.PathAndQuery ] ) {
+                this._captchas[ uri.PathAndQuery ] = new Captcha();
+            }
+
+            if ( null == this._captchas[ uri.PathAndQuery ].Uri ) {
+                this._captchas[ uri.PathAndQuery ].Uri = uri;
+            }
+
+            return this._captchas[ uri.PathAndQuery ];
+        }
+
         public Boolean HasCaptchasBeenLoaded {
             get;
             private set;
@@ -465,24 +525,25 @@
 
         private void Visit( BitcoinFaucets faucetID ) {
             try {
-                var uri = new Uri( GetDescription( faucetID ) );
-                Debug.WriteLine( "Visiting ({0}) {1}", faucetID, GetDescription( faucetID ) );
+                var description = GetDescription( faucetID );
+                var uri = new Uri( description );
+                Debug.WriteLine( "Visiting ({0}) {1} @ {2}", faucetID, description, uri.PathAndQuery );
 
-                var faucetUri = GetDescription( faucetID );
 
-                if ( String.IsNullOrWhiteSpace( faucetUri ) ) {
+                if ( String.IsNullOrWhiteSpace( description ) ) {
                     return;
                 }
 
                 Throttle();
-                var navigated = this.Navigate( faucetUri ).Wait( this.NavigationTimeout );
+                var navigated = this.Navigate( description ).Wait( this.NavigationTimeout );
                 if ( !navigated ) {
                     faucetID = BitcoinFaucets.AboutBlank;
                 }
+                Throttle();
 
                 switch ( faucetID ) {
                     case BitcoinFaucets.BitChestDotMe:
-                        Visit_BitChestDotMe( "1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE" );
+                        Visit_BitChestDotMe( bitcoinAddress: "1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE" );
                         break;
 
                     case BitcoinFaucets.LandOfBitCoinDotCom:
@@ -497,8 +558,14 @@
             catch ( Exception exception ) {
                 exception.Error();
             }
+            finally {
+                this.Throttle();
+            }
         }
 
+        /// <summary>
+        /// <para>Defaults to <see cref="Seconds.Thirty"/> in the ctor.</para>
+        /// </summary>
         public TimeSpan NavigationTimeout {
             get;
             set;
@@ -525,24 +592,41 @@
 
             Throttle();
 
-            var alllinks = this.GetAllLinks().ToList();
-            var links = alllinks.Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
+            var allLinks = this.GetAllLinks().ToList();
+            var links = allLinks.Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
 
             foreach ( var link in links ) {
-                Throttle();
-                this.Navigate( link ).Wait( this.CancellationTokenSource.Token );
-                Throttle();
-                FindCaptcha();  //TODO solve captcha (or try past answers)
-                Throttle( Seconds.Ten );
+                try {
+                    Throttle();
+                    this.Navigate( link ).Wait( this.CancellationTokenSource.Token );
+                    Throttle();
+                    this.StartTheWholeCaptchaThing();
+                }
+                catch ( Exception exception ) {
+                    exception.Error();
+                }
+                finally {
+                    Throttle();
+                }
+
 
                 //TODO submit
             }
 
+            Throttle( Seconds.Ten );
+
             Report.Exit();
         }
 
-        private void FindCaptcha() {
-            // 
+        private void StartTheWholeCaptchaThing() {
+            var uri = this.GetBrowserLocation();
+            var captcha = this.EnsureCaptcha( uri );
+
+            captcha.Status = CaptchaStatus.Searching;
+
+            var cqcqq = this.EnsureCaptcha( uri );
+            cqcqq.ResponseID = 1234.ToString();
+
             var cq = new CQ( this.GetBrowserHTML(), HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
 
             var captchaChallange = cq[ "recaptcha_challenge_image" ];
@@ -553,47 +637,10 @@
                 this.GetCaptcha( captchaChallange, captchaInputArea );
             }
             //TODO look for other captcha
+            //TODO solve captcha (or try past answers)
         }
 
-        public Boolean UpdateWebsite( [CanBeNull] Uri uri, [CanBeNull] out WebSite webSite ) {
-            webSite = default( WebSite );
-            if ( null == uri ) {
-                return false;
-            }
-            if ( null == this._webSites ) {
-                return false;
-            }
 
-            if ( null == this._webSites[ uri.PathAndQuery ] ) {
-                this._webSites[ uri.PathAndQuery ] = new WebSite();
-            }
-            webSite = this._webSites[ uri.PathAndQuery ];
-            if ( null == webSite.Location ) {
-                webSite.Location = uri;
-            }
-
-            return true;
-        }
-
-        public CaptchaSite UpdateCaptcha( [CanBeNull] Uri uri ) {
-            //captchaSite = default( CaptchaSite );
-            if ( null == uri ) {
-                return default( CaptchaSite );
-            }
-            if ( null == this._captchaSites ) {
-                return default( CaptchaSite );
-            }
-
-            if ( null == this._captchaSites[ uri.PathAndQuery ] ) {
-                this._captchaSites[ uri.PathAndQuery ] = new CaptchaSite();
-            }
-            var captchaSite = this._captchaSites[ uri.PathAndQuery ];
-            if ( null == captchaSite.Location ) {
-                captchaSite.Location = uri;
-            }
-
-            return captchaSite;
-        }
 
         private void GetCaptcha( CQ captchaChallange, CQ captchaInputArea ) {
             try {
@@ -622,13 +669,13 @@
                     bitmapImage.EndInit();
 
                     if ( isImageGood && bitmapImage.Width > 0 && bitmapImage.Height > 0 ) {
-                        UpdateCaptcha( imageUri ).CaptchaStatus = CaptchaStatus.LoadedImage;
+                        EnsureCaptcha( imageUri ).Status = CaptchaStatus.LoadedImage;
                     }
 
 
                 }
                 catch ( Exception exception ) {
-                    UpdateCaptcha( imageUri ).CaptchaStatus = CaptchaStatus.ErrorLoadingImage;
+                    EnsureCaptcha( imageUri ).Status = CaptchaStatus.ErrorLoadingImage;
                     exception.Error();
                 }
             }
@@ -659,6 +706,7 @@
         }
 
         private void Visit_AboutBlank() {
+            this.Navigate( "about:blank" ).Wait( this.NavigationTimeout );
             Throttle();
         }
     }
