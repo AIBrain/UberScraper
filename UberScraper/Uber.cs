@@ -369,12 +369,12 @@
                 if ( webBrowser != null ) {
                     webBrowser.Invoke( method: new Action( () => {
                         Report.Before( String.Format( "Navigating to {0}...", uri ) );
-                        if ( HasWebSitesBeenLoaded ) {
-                            this.UpdateWebsite( uri,
-                        }
-                        this._webSites[ uri.PathAndQuery ] = new WebSite {
-                            Location = uri
-                        };
+                        //if ( HasWebSitesBeenLoaded ) {
+                            this.EnsureWebsite( uri );
+                        //}
+                        //this._webSites[ uri.PathAndQuery ] = new WebSite {
+                        //    Location = uri
+                        //};
                         webBrowser.Source = uri;
 
                         while ( webBrowser.IsLoading || webBrowser.IsNavigating ) {
