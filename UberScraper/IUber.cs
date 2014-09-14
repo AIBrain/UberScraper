@@ -12,7 +12,7 @@
         Boolean LoadWebsites();
 
         /// <summary>
-        /// <seealso cref="Uber.WebBrowser"/>
+        /// <seealso cref="Uber.WebBrowser1"/>
         /// </summary>
         /// <param name="webBrowser"></param>
         void SetBrowser( WebControl webBrowser );

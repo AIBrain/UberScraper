@@ -13,16 +13,18 @@ namespace UberScraper {
         static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault( false );
-
             using ( var mainForm = Ioc.Container.TryGet<MainForm>() ) {
                 try {
-                    Application.Run( mainForm );
+                    if ( mainForm != null ) {
+                        Application.Run( mainForm );
+                    }
                 }
-                catch ( Exception exception) {
+                catch ( Exception exception ) {
                     exception.Error();
                 }
             }
 
         }
+
     }
 }

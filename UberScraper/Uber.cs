@@ -28,9 +28,9 @@
 
     public class Uber : IUber {
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
-        private readonly ConcurrentDictionary<Object, DateTime> _otherObjects = new ConcurrentDictionary<Object, DateTime>();
 
-        private WebControl _webBrowser;
+
+        private WebControl _webBrowser1;
 
         [NotNull]
         private PersistTable<String, WebSite> _webSites;
@@ -38,15 +38,19 @@
         [NotNull]
         private PersistTable<String, Captcha> _captchas;
 
+        private WebControl _webBrowser2;
+
         public Uber() {
             this.CancellationTokenSource = new CancellationTokenSource();
             this.NavigationTimeout = Seconds.Thirty;
         }
 
+/*
         public SynchronizationContext AwesomiumContext {
             get;
             set;
         }
+*/
 
         [NotNull]
         public CancellationTokenSource CancellationTokenSource {
@@ -60,17 +64,34 @@
         }
 
         [CanBeNull]
-        public WebControl WebBrowser {
+        public WebControl WebBrowser1 {
             get {
-                return this._webBrowser;
+                return this._webBrowser1;
             }
 
             set {
-                this._webBrowser = value;
+                this._webBrowser1 = value;
                 if ( value == null ) {
                     return;
                 }
-                this._webBrowser.LoadingFrameComplete += ( sender, args ) => {
+                this._webBrowser1.LoadingFrameComplete += ( sender, args ) => {
+                };
+                this._autoDisposables.TryAdd( value, DateTime.Now );
+            }
+        }
+
+        [CanBeNull]
+        public WebControl WebBrowser2 {
+            get {
+                return this._webBrowser2;
+            }
+
+            set {
+                this._webBrowser2 = value;
+                if ( value == null ) {
+                    return;
+                }
+                this._webBrowser2.LoadingFrameComplete += ( sender, args ) => {
                 };
                 this._autoDisposables.TryAdd( value, DateTime.Now );
             }
@@ -82,11 +103,6 @@
         public void Dispose() {
             try {
                 Report.Enter();
-
-                var before = GC.GetTotalMemory( true );
-                _otherObjects.Clear();
-                var after = GC.GetTotalMemory( false );
-                var difference = before - after;
 
                 foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                     try {
@@ -108,7 +124,7 @@
         [CanBeNull]
         public String GetBrowserHTML() {
             try {
-                var browser = this.WebBrowser;
+                var browser = this.WebBrowser1;
                 if ( browser != null ) {
                     var result = browser.Invoke( new Func<string>( () => browser.HTML ) );
                     return result as String;
@@ -121,13 +137,13 @@
         }
 
         /// <summary>
-        /// Retrieve the <see cref="Uri"/> the <see cref="WebBrowser"/> is currently at.
+        /// Retrieve the <see cref="Uri"/> the <see cref="WebBrowser1"/> is currently at.
         /// </summary>
         /// <returns></returns>
         [NotNull]
-        public Uri GetBrowserLocation() {
+        public Uri GetBrowser1Location() {
             try {
-                var browser = this.WebBrowser;
+                var browser = this.WebBrowser1;
                 if ( browser != null ) {
                     var result = browser.Invoke( new Func<Uri>( () => browser.Source ) );
                     return ( Uri )result;
@@ -142,20 +158,21 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="webBrowser"></param>
         /// <param name="javascript"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public Boolean GetJavascriptWithResult( String javascript, out JSValue result ) {
+        public static Boolean GetJavascriptWithResult( WebControl webBrowser, String javascript, out JSValue result ) {
             result = default( JSValue );
-            var browser = this.WebBrowser;
-            if ( browser != null ) {
-                try {
-                    result = ( JSValue )browser.Invoke( new Func<JSValue>( () => browser.ExecuteJavascriptWithResult( javascript ) ) );
-                    return true;
-                }
-                catch ( Exception exception ) {
-                    exception.Error();
-                }
+            if ( webBrowser == null ) {
+                return false;
+            }
+            try {
+                result = ( JSValue )webBrowser.Invoke( new Func<JSValue>( () => webBrowser.ExecuteJavascriptWithResult( javascript ) ) );
+                return true;
+            }
+            catch ( Exception exception ) {
+                exception.Error();
             }
             return false;
         }
@@ -163,47 +180,48 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="webBrowser"></param>
         /// <param name="javascript"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public Boolean GetJavascriptWithResultArray( String javascript, out JSValue[] result ) {
+        public static Boolean GetJavascriptWithResultArray( WebControl webBrowser, String javascript, out JSValue[] result ) {
             result = default( JSValue[] );
-            var browser = this.WebBrowser;
-            if ( browser != null ) {
-                try {
-                    var links = new JSValue[] { };
-                    //dynamic localresult = null;
-                    //dynamic links = null;
+            if ( webBrowser == null ) {
+                return false;
+            }
+            try {
+                var links = new JSValue[] { };
+                //dynamic localresult = null;
+                //dynamic links = null;
 
-                    browser.Invoke( new Action( () => {
+                webBrowser.Invoke( new Action( () => {
 
-                        //var bob = new CQ(
+                                                   //var bob = new CQ(
 
-                        //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                        //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                        var aresult = browser.ExecuteJavascriptWithResult( String.Format( "(function(){{ {0} }})()", javascript ) );
-                        try {
-                            //links = aresult.getElementsByTagName( 'a' );
+                                                   //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
+                                                   //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
+                                                   var aresult = webBrowser.ExecuteJavascriptWithResult( String.Format( "(function(){{ {0} }})()", javascript ) );
+                                                   try {
+                                                       //links = aresult.getElementsByTagName( 'a' );
 
-                            links = ( JSValue[] )aresult;
+                                                       links = ( JSValue[] )aresult;
 
-                        }
-                        catch ( InvalidOperationException ) {
-                        }
-                    } ) );
+                                                   }
+                                                   catch ( InvalidOperationException ) {
+                                                   }
+                                               } ) );
 
-                    //foreach ( var link in links ) {
-                    //    Console.WriteLine( link as object );
-                    //}
+                //foreach ( var link in links ) {
+                //    Console.WriteLine( link as object );
+                //}
 
-                    result = links;
+                result = links;
 
 
-                    return true;
-                }
-                catch ( Exception exception ) {
-                    exception.Error();
-                }
+                return true;
+            }
+            catch ( Exception exception ) {
+                exception.Error();
             }
             return false;
         }
@@ -217,9 +235,12 @@
             //const string javascript = "document.links";
             //const string javascript = "document.links";
 
-            var cq = new CQ( this.GetBrowserHTML() );
+            var html = this.GetBrowserHTML();
+            
+            var cq = new CQ( html );
 
             var anchors = cq[ "a" ];
+            //var anchors = cq[ "document.links" ];
 
             foreach ( var domObject in anchors ) {
                 var href = domObject[ "href" ];
@@ -363,29 +384,31 @@
             }
 
             try {
+
                 //this.AwesomiumContext.
 
-                var webBrowser = this.WebBrowser;
+                var webBrowser = this.WebBrowser1;
                 if ( webBrowser != null ) {
                     webBrowser.Invoke( method: new Action( () => {
                         Report.Before( String.Format( "Navigating to {0}...", uri ) );
-                        //if ( HasWebSitesBeenLoaded ) {
-                            this.EnsureWebsite( uri );
-                        //}
-                        //this._webSites[ uri.PathAndQuery ] = new WebSite {
-                        //    Location = uri
-                        //};
+
+                        this.EnsureWebsite( uri );
+
                         webBrowser.Source = uri;
 
                         while ( webBrowser.IsLoading || webBrowser.IsNavigating ) {
+                            //this.Throttle( Milliseconds.Hertz111 );
+                            //WebCore.Update();
+                            Application.DoEvents();
                             if ( this.CancellationTokenSource.IsCancellationRequested ) {
                                 break;
                             }
-                            WebCore.Update();
-                            Application.DoEvents();
                         }
+
                         Report.After( "done navigating." );
                     } ) );
+
+                    
 
                     return webBrowser.IsDocumentReady && webBrowser.IsResponsive;
                 }
@@ -396,12 +419,8 @@
             return false;
         }
 
-        public void Remember<TKey>( TKey key ) {
-            this._otherObjects.TryAdd( key, DateTime.Now );
-        }
-
         public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
-            this.WebBrowser = webBrowser;
+            this.WebBrowser1 = webBrowser;
         }
 
         /// <summary>
@@ -435,7 +454,7 @@
                 //if ( cancellationTokenSource != null ) {
                 cancellationTokenSource.Cancel();
                 //}
-                var webBrowser = this.WebBrowser;
+                var webBrowser = this.WebBrowser1;
                 if ( webBrowser != null ) {
                     webBrowser.Stop();
                 }
@@ -463,18 +482,23 @@
         }
 
         private void Throttle( TimeSpan? until = null ) {
-            //await Task.Delay( TimeSpan.FromSeconds( 1 ) );
             if ( !until.HasValue ) {
-                until = Seconds.Five;
+                until = Milliseconds.Hertz111;
             }
             var watch = Stopwatch.StartNew();
             do {
-                Thread.Sleep( Milliseconds.FiveHundred );
                 Application.DoEvents();
+                if ( watch.Elapsed < until.Value ) {
+                    Thread.Sleep( Milliseconds.Hertz111 );
+                }
+                else {
+                    break;
+                }
                 if ( this.CancellationTokenSource.IsCancellationRequested ) {
                     break;
                 }
-            } while ( watch.Elapsed > until.Value );
+            } while ( watch.Elapsed < until.Value );
+            watch.Stop();
         }
 
         private async Task<Boolean> LoadDictionaries() {
@@ -534,12 +558,14 @@
                     return;
                 }
 
-                Throttle();
+                //Throttle();
                 var navigated = this.Navigate( description ).Wait( this.NavigationTimeout );
                 if ( !navigated ) {
                     faucetID = BitcoinFaucets.AboutBlank;
                 }
-                Throttle();
+                if ( !description.StartsWith( "about:", StringComparison.OrdinalIgnoreCase ) ) {
+                    Throttle();
+                }
 
                 switch ( faucetID ) {
                     case BitcoinFaucets.BitChestDotMe:
@@ -551,7 +577,7 @@
                         break;
 
                     default:
-                        Visit_AboutBlank();
+                        //Visit_AboutBlank();
                         break;
                 }
             }
@@ -571,8 +597,9 @@
             set;
         }
 
+
         public void JsFireEvent( string getElementQuery, string eventName ) {
-            var browser = this.WebBrowser;
+            var browser = this.WebBrowser1;
             if ( browser != null ) {
                 browser.ExecuteJavascript( @"
                             function fireEvent(element,event) {
@@ -590,9 +617,10 @@
                 return;
             }
 
-            Throttle();
+            Throttle( Seconds.Three );
 
             var allLinks = this.GetAllLinks().ToList();
+
             var links = allLinks.Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
 
             foreach ( var link in links ) {
@@ -619,7 +647,7 @@
         }
 
         private void StartTheWholeCaptchaThing() {
-            var uri = this.GetBrowserLocation();
+            var uri = this.GetBrowser1Location();
             var captcha = this.EnsureCaptcha( uri );
 
             captcha.Status = CaptchaStatus.Searching;

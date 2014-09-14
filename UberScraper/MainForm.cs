@@ -5,10 +5,10 @@ namespace UberScraper {
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Awesomium.Core;
+    using FluentAssertions;
     using Librainian.Annotations;
     using Librainian.Controls;
     using Librainian.Magic;
-    using Librainian.Threading;
 
     public partial class MainForm : Form {
 
@@ -17,16 +17,17 @@ namespace UberScraper {
             private set;
         }
 
+        [ CanBeNull ]
+        public CancellationTokenSource CancellationTokenSource {
+            get;
+             set;
+        }
+
+
         public MainForm() {
+            AwesomiumContext = SynchronizationContext.Current;
             this.InitializeComponent();
-
-            var awesomiumThread = new Thread( () => {
-                WebCore.Started += ( s, e ) => {
-                    this.AwesomiumContext = SynchronizationContext.Current;
-                };
-
-                WebCore.Run();
-            } );
+            AwesomiumContext.Should().NotBeNull();
         }
 
         [CanBeNull]
@@ -38,22 +39,11 @@ namespace UberScraper {
         private void MainForm_Load( object sender, EventArgs e ) {
             this.Uber = Ioc.Container.TryGet<Uber>();
             var uber = this.Uber;
-            if ( uber != null ) {
-
-                uber.WebBrowser = this.webBrowser;
-                WebCore.Started += ( o, coreStartEventArgs ) => {
-                    uber.AwesomiumContext = SynchronizationContext.Current;
-                };
-                uber.Remember( Task.Factory.StartNew( () => {
-                    Report.Enter();
-
-                    //uber.AwesomiumContext.
-
-
-
-                    Report.Exit();
-                }, TaskCreationOptions.LongRunning ) );
+            if ( uber == null ) {
+                return;
             }
+            uber.WebBrowser1 = this.webBrowser1;
+            uber.WebBrowser2 = this.webBrowser2;
         }
 
         private async void MainForm_Shown( object sender, EventArgs e ) {
@@ -79,7 +69,7 @@ namespace UberScraper {
 
         private void Awesomium_Windows_Forms_WebControl_LoadingFrame( object sender, LoadingFrameEventArgs e ) {
             this.labelNavigationStatus.Text( "Loading frame" );
-            this.labelBrowserSource.Text( this.webBrowser.Source.ToString() );
+            this.labelBrowserSource.Text( this.webBrowser1.Source.ToString() );
         }
 
         private void Awesomium_Windows_Forms_WebControl_LoadingFrameComplete( object sender, FrameEventArgs e ) {
@@ -88,6 +78,12 @@ namespace UberScraper {
 
         private void MainForm_FormClosing( object sender, FormClosingEventArgs e ) {
             this.labelNavigationStatus.Text( "Form closing" );
+
+            var cancellationTokenSource = this.CancellationTokenSource;
+            if ( cancellationTokenSource != null ) {
+                cancellationTokenSource.Cancel();
+            }
+
             var uber = this.Uber;
             if ( uber != null ) {
                 uber.Stop();
