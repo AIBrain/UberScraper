@@ -14,6 +14,7 @@
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
     using CsQuery;
+    using CsQuery.ExtensionMethods.Internal;
     using FluentAssertions;
     using Librainian;
     using Librainian.Annotations;
@@ -45,12 +46,12 @@
             this.NavigationTimeout = Seconds.Thirty;
         }
 
-/*
-        public SynchronizationContext AwesomiumContext {
-            get;
-            set;
-        }
-*/
+        /*
+                public SynchronizationContext AwesomiumContext {
+                    get;
+                    set;
+                }
+        */
 
         [NotNull]
         public CancellationTokenSource CancellationTokenSource {
@@ -122,12 +123,17 @@
         }
 
         [CanBeNull]
-        public String GetBrowserHTML() {
+        public static String GetBrowserHTML( WebControl webBrowser ) {
             try {
-                var browser = this.WebBrowser1;
-                if ( browser != null ) {
-                    var result = browser.Invoke( new Func<string>( () => browser.HTML ) );
-                    return result as String;
+                if ( webBrowser != null ) {
+                    //var result = webBrowser.Invoke( new Func<string>( () => webBrowser.HTML ) );
+                    var result = webBrowser.Invoke( new Func<string>( () => webBrowser.ExecuteJavascriptWithResult( "document.getElementsByTagName('html')[0].innerHTML" ) ) );
+
+
+                    if ( result is String ) {
+                        return result as String;
+                    }
+                    return result.ToString();
                 }
             }
             catch ( Exception exception ) {
@@ -196,20 +202,20 @@
 
                 webBrowser.Invoke( new Action( () => {
 
-                                                   //var bob = new CQ(
+                    //var bob = new CQ(
 
-                                                   //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                                                   //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                                                   var aresult = webBrowser.ExecuteJavascriptWithResult( String.Format( "(function(){{ {0} }})()", javascript ) );
-                                                   try {
-                                                       //links = aresult.getElementsByTagName( 'a' );
+                    //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
+                    //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
+                    var aresult = webBrowser.ExecuteJavascriptWithResult( String.Format( "(function(){{ {0} }})()", javascript ) );
+                    try {
+                        //links = aresult.getElementsByTagName( 'a' );
 
-                                                       links = ( JSValue[] )aresult;
+                        links = ( JSValue[] )aresult;
 
-                                                   }
-                                                   catch ( InvalidOperationException ) {
-                                                   }
-                                               } ) );
+                    }
+                    catch ( InvalidOperationException ) {
+                    }
+                } ) );
 
                 //foreach ( var link in links ) {
                 //    Console.WriteLine( link as object );
@@ -235,9 +241,12 @@
             //const string javascript = "document.links";
             //const string javascript = "document.links";
 
-            var html = this.GetBrowserHTML();
-            
+            var html = GetBrowserHTML( this.WebBrowser1 );
+
             var cq = new CQ( html );
+
+            var cq2 = new CQ( GetBrowserHTML( this.WebBrowser1 ), HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
+
 
             var anchors = cq[ "a" ];
             //var anchors = cq[ "document.links" ];
@@ -255,7 +264,7 @@
 
         [CanBeNull]
         public String GetBrowserHTMLCleaned() {
-            var badhtml = this.GetBrowserHTML();
+            var badhtml = GetBrowserHTML( this.WebBrowser1 );
             if ( null == badhtml ) {
                 return null;
             }
@@ -384,12 +393,19 @@
             }
 
             try {
+                if ( this.CancellationTokenSource.IsCancellationRequested ) {
+                    return false;
+                }
 
                 //this.AwesomiumContext.
 
                 var webBrowser = this.WebBrowser1;
                 if ( webBrowser != null ) {
                     webBrowser.Invoke( method: new Action( () => {
+                        if ( this.CancellationTokenSource.IsCancellationRequested ) {
+                            return;
+                        }
+
                         Report.Before( String.Format( "Navigating to {0}...", uri ) );
 
                         this.EnsureWebsite( uri );
@@ -408,7 +424,7 @@
                         Report.After( "done navigating." );
                     } ) );
 
-                    
+
 
                     return webBrowser.IsDocumentReady && webBrowser.IsResponsive;
                 }
@@ -525,12 +541,16 @@
         }
 
         /// <summary>
-        /// Returns the <see cref="Captcha"/> object, but I do not understand yet if it will reflect back to the object in the dictionary.. must test.
+        /// Returns the <see cref="Librainian.Internet.Captcha"/> object. Call <see cref="Captcha(System.Uri,Librainian.Internet.Captcha)"/> to return the update.
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
         [NotNull]
-        public Captcha EnsureCaptcha( [NotNull] Uri uri ) {
+        public Captcha Captcha( [CanBeNull] Uri uri ) {
+            if ( null == uri ) {
+                return new Captcha();
+            }
+
             if ( null == this._captchas[ uri.PathAndQuery ] ) {
                 this._captchas[ uri.PathAndQuery ] = new Captcha();
             }
@@ -540,6 +560,18 @@
             }
 
             return this._captchas[ uri.PathAndQuery ];
+        }
+
+        /// <summary>
+        /// <para>Updates the stored captcha with this new information.</para>
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="captcha"></param>
+        public void Captcha( [CanBeNull] Uri uri, [CanBeNull] Captcha captcha ) {
+            if ( null == uri || null == captcha ) {
+                return;
+            }
+            this._captchas[ uri.PathAndQuery ] = captcha;
         }
 
         public Boolean HasCaptchasBeenLoaded {
@@ -625,6 +657,7 @@
 
             foreach ( var link in links ) {
                 try {
+                    this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ).Wait( NavigationTimeout ); 
                     Throttle();
                     this.Navigate( link ).Wait( this.CancellationTokenSource.Token );
                     Throttle();
@@ -648,32 +681,52 @@
 
         private void StartTheWholeCaptchaThing() {
             var uri = this.GetBrowser1Location();
-            var captcha = this.EnsureCaptcha( uri );
 
-            captcha.Status = CaptchaStatus.Searching;
+            var captcha = this.Captcha( uri );
+            captcha.Status = CaptchaStatus.SearchingForChallenge;
+            this.Captcha( uri, captcha );
 
-            var cqcqq = this.EnsureCaptcha( uri );
-            cqcqq.ResponseID = 1234.ToString();
+            var cq = new CQ( GetBrowserHTML( this.WebBrowser1 ), HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
+            if ( cq.IsNullOrEmpty() ) {
+                captcha.Status = CaptchaStatus.ChallengeNotFound;
+                this.Captcha( uri, captcha );
+                return;
+            }
 
-            var cq = new CQ( this.GetBrowserHTML(), HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
+            var captchaChallenge = cq[ "recaptcha_challenge_image" ];
 
-            var captchaChallange = cq[ "recaptcha_challenge_image" ];
+            if ( captchaChallenge.IsNullOrEmpty() ) {
+                captchaChallenge = cq[ "adcopy-puzzle-image" ][ "img" ];
+            }
 
-            var captchaInputArea = cq[ "recaptcha_response_field" ];
+            if ( captchaChallenge.IsNullOrEmpty() ) {
+                captcha.Status = CaptchaStatus.ChallengeNotFound;
+                this.Captcha( uri, captcha );
+                return;
+            }
 
-            if ( null != captchaChallange && null != captchaInputArea ) {
-                this.GetCaptcha( captchaChallange, captchaInputArea );
+            captcha.Status = CaptchaStatus.ChallengeFound;
+            this.Captcha( uri, captcha );
+
+            var captchaResponse = cq[ "recaptcha_response_field" ];
+
+            if ( null != captchaChallenge && null != captchaResponse ) {
+                this.GetCaptcha( uri, captchaChallenge, captchaResponse );
             }
             //TODO look for other captcha
             //TODO solve captcha (or try past answers)
         }
 
-
-
-        private void GetCaptcha( CQ captchaChallange, CQ captchaInputArea ) {
+        /// <summary>
+        /// Pull the image locally so we can take a look at it.
+        /// </summary>
+        /// <param name="challenge"></param>
+        /// <param name="captchaChallenge"></param>
+        /// <param name="captchaInputArea"></param>
+        private void GetCaptcha( Uri challenge, CQ captchaChallenge, CQ captchaInputArea ) {
             try {
                 Report.Enter();
-                var imageSrc = captchaChallange[ "src" ].Text();
+                var imageSrc = captchaChallenge[ "src" ].Text();
                 Uri imageUri;
                 if ( !Uri.TryCreate( imageSrc, UriKind.Absolute, out imageUri ) ) {
                     return;
@@ -697,13 +750,15 @@
                     bitmapImage.EndInit();
 
                     if ( isImageGood && bitmapImage.Width > 0 && bitmapImage.Height > 0 ) {
-                        EnsureCaptcha( imageUri ).Status = CaptchaStatus.LoadedImage;
+                        var captcha = this.Captcha( imageUri );
+                        captcha.Status = CaptchaStatus.LoadedImage;
+                        this.Captcha( challenge, captcha );
                     }
 
 
                 }
                 catch ( Exception exception ) {
-                    EnsureCaptcha( imageUri ).Status = CaptchaStatus.ErrorLoadingImage;
+                    this.Captcha( imageUri ).Status = CaptchaStatus.ErrorLoadingImage;
                     exception.Error();
                 }
             }
@@ -722,7 +777,7 @@
                 return;
             }
 
-            var bob = new CQ( this.GetBrowserHTML() );
+            var bob = new CQ( GetBrowserHTML( this.WebBrowser1 ) );
             var text = bob[ "username" ].Text();
             bob[ "username" ].Text( "AIBrain" );
 
