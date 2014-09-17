@@ -1,30 +1,43 @@
-﻿
-namespace UberScraper {
+﻿namespace UberScraper {
+
     using System;
     using System.Windows.Forms;
     using Librainian;
+    using Librainian.Extensions;
     using Librainian.Magic;
 
-    static class Program {
+    internal static class Program {
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main() {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault( false );
-            using ( var mainForm = Ioc.Container.TryGet<MainForm>() ) {
-                try {
+        private static void Main() {
+            try {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault( false );
+
+                Diagnostical.HasConsoleBeenAllocated = NativeWin32.AllocConsole();
+                Console.WriteLine( "Logging console activated." );
+                Console.WriteLine( "Loading MainForm." );
+
+                using ( var mainForm = Ioc.Container.TryGet< MainForm >() ) {
                     if ( mainForm != null ) {
                         Application.Run( mainForm );
                     }
                 }
-                catch ( Exception exception ) {
-                    exception.Error();
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            finally {
+                if ( Diagnostical.HasConsoleBeenAllocated ) {
+                    Diagnostical.HasConsoleBeenAllocated = !NativeWin32.FreeConsole();
                 }
             }
 
-        }
 
+            
+        }
     }
 }

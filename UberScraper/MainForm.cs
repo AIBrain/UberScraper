@@ -1,5 +1,5 @@
-﻿
-namespace UberScraper {
+﻿namespace UberScraper {
+
     using System;
     using System.Threading;
     using System.Threading.Tasks;
@@ -9,20 +9,9 @@ namespace UberScraper {
     using Librainian.Annotations;
     using Librainian.Controls;
     using Librainian.Magic;
+    using Properties;
 
     public partial class MainForm : Form {
-
-        public SynchronizationContext AwesomiumContext {
-            get;
-            private set;
-        }
-
-        [ CanBeNull ]
-        public CancellationTokenSource CancellationTokenSource {
-            get;
-             set;
-        }
-
 
         public MainForm() {
             AwesomiumContext = SynchronizationContext.Current;
@@ -30,29 +19,18 @@ namespace UberScraper {
             AwesomiumContext.Should().NotBeNull();
         }
 
+        public SynchronizationContext AwesomiumContext {
+            get;
+            private set;
+        }
+
+        [NotNull]
+        protected CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+
         [CanBeNull]
         public Uber Uber {
             get;
             set;
-        }
-
-        private void MainForm_Load( object sender, EventArgs e ) {
-            this.Uber = Ioc.Container.TryGet<Uber>();
-            var uber = this.Uber;
-            if ( uber == null ) {
-                return;
-            }
-            uber.WebBrowser1 = this.webBrowser1;
-            uber.WebBrowser2 = this.webBrowser2;
-        }
-
-        private async void MainForm_Shown( object sender, EventArgs e ) {
-            var uber = this.Uber;
-            if ( null == uber ) {
-                return;
-            }
-            await uber.Start();
-            await Task.Run( () => uber.VisitSites() );
         }
 
         private void Awesomium_Windows_Forms_WebControl_AddressChanged( object sender, UrlEventArgs e ) {
@@ -78,16 +56,75 @@ namespace UberScraper {
 
         private void MainForm_FormClosing( object sender, FormClosingEventArgs e ) {
             this.labelNavigationStatus.Text( "Form closing" );
-
-            var cancellationTokenSource = this.CancellationTokenSource;
-            if ( cancellationTokenSource != null ) {
-                cancellationTokenSource.Cancel();
-            }
+            Settings.Default.Save();
 
             var uber = this.Uber;
             if ( uber != null ) {
                 uber.Stop();
             }
+        }
+
+        private void MainForm_Load( object sender, EventArgs e ) {
+            Console.Write( "Loading settings..." );
+            this.Uber = Ioc.Container.TryGet<Uber>();
+            var uber = this.Uber;
+            if ( uber == null ) {
+                return;
+            }
+            uber.WebBrowser1 = this.webBrowser1;
+            uber.WebBrowser1.Source = new Uri( "about:blank" );
+            //uber.WebBrowser2 = this.webBrowser2;
+            this.buttonStart.Usable( false );
+            Console.WriteLine( "loaded." );
+        }
+
+        private async void MainForm_Shown( object sender, EventArgs e ) {
+            var uber = this.Uber;
+            if ( null == uber ) {
+                return;
+            }
+            if ( await uber.Init() ) {
+                this.buttonStart.Usable( true );
+            }
+        }
+
+        private async void buttonStart_Click( object sender, EventArgs e ) {
+            Console.WriteLine( "Website visit start requested..." );
+            try {
+                this.buttonStop.Usable( true );
+                var uber = this.Uber;
+                if ( null == uber ) {
+                    return;
+                }
+                await Task.Run( () => uber.VisitSites( CancellationTokenSource ) );
+            }
+            finally {
+                this.buttonStop.Usable( false );
+            }
+        }
+
+        private async void buttonStop_Click( object sender, EventArgs e ) {
+            Console.WriteLine( "Stop button pressed." );
+            var uber = this.Uber;
+            if ( uber != null ) {
+                await Task.Run( () => uber.Stop() );
+            }
+        }
+
+        private void MainForm_FormClosed( object sender, FormClosedEventArgs e ) {
+            Console.Write( "Disposing of resources..." );
+            var uber = this.Uber;
+            if ( uber != null ) {
+                using ( uber ) {
+                    uber.Dispose();
+                }
+            }
+            this.Dispose();
+            Console.Write( "Resources disposed." );
+#if DEBUG
+            Console.WriteLine( "Press any key to exit" );
+            Console.ReadKey();
+#endif
         }
     }
 }

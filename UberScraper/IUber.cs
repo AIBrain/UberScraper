@@ -7,7 +7,7 @@
     /// <para>Interface for the <see cref="Uber"/> class.</para>
     /// </summary>
     public interface IUber : IDisposable {
-        Task<Boolean> Start();
+        Task<Boolean> Init();
 
         Boolean LoadWebsites();
 
