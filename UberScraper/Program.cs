@@ -1,6 +1,7 @@
 ﻿namespace UberScraper {
 
     using System;
+    using System.Reflection;
     using System.Windows.Forms;
     using Librainian;
     using Librainian.Extensions;
@@ -18,8 +19,11 @@
                 Application.SetCompatibleTextRenderingDefault( false );
 
                 Diagnostical.HasConsoleBeenAllocated = NativeWin32.AllocConsole();
-                Console.WriteLine( "Logging console activated." );
-                Console.WriteLine( "Loading MainForm." );
+                if ( Diagnostical.HasConsoleBeenAllocated ) {
+                    Console.WriteLine( "Logging console activated." );
+                    Console.WriteLine( "Assembly version {0}", Assembly.GetEntryAssembly().GetName().Version );
+                    Console.WriteLine( "Loading MainForm." );
+                }
 
                 using ( var mainForm = Ioc.Container.TryGet< MainForm >() ) {
                     if ( mainForm != null ) {
