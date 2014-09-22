@@ -91,12 +91,15 @@
         private async void buttonStart_Click( object sender, EventArgs e ) {
             Console.WriteLine( "Website visit start requested..." );
             try {
+                this.buttonStart.Usable( false );
                 this.buttonStop.Usable( true );
                 var uber = this.Uber;
                 if ( null == uber ) {
                     return;
                 }
-                await Task.Run( () => uber.VisitSites( CancellationTokenSource ) );
+                //await Task.Run( () => 
+                uber.VisitSites( CancellationTokenSource );
+                //);
             }
             finally {
                 this.buttonStop.Usable( false );
