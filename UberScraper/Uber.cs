@@ -50,7 +50,7 @@ namespace UberScraper {
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
 
         [NotNull]
-        private PersistTable<String, Captcha> _captchas;
+        private PersistTable<String, Captcha> _captchaDatabase;
 
         [NotNull]
         private PersistTable<String, String> _pastAnswers;
@@ -80,17 +80,17 @@ namespace UberScraper {
             private set;
         }
 
-        public Boolean HasCaptchasBeenLoaded {
+        public Boolean HasCaptchaDatabaseBeenConnected {
             get;
             private set;
         }
 
-        public Boolean HasPastAnswersBeenLoaded {
+        public Boolean HasPastAnswersBeenConnected {
             get;
             private set;
         }
 
-        public Boolean HasWebSitesBeenLoaded {
+        public Boolean HasWebSitesDatabaseBeenConnected {
             get;
             private set;
         }
@@ -303,6 +303,94 @@ namespace UberScraper {
             return null;
         }
 
+        public Boolean ConnectDatabase_Captchas() {
+            try {
+                Report.Enter();
+
+                this._captchaDatabase = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
+
+                if ( null != this._captchaDatabase ) {
+                    this._autoDisposables.TryAdd( this._captchaDatabase, DateTime.Now );
+                }
+            }
+            catch ( InvalidOperationException ) {
+                return false;
+            }
+            catch ( PathTooLongException ) {
+                return false;
+            }
+            catch ( DirectoryNotFoundException ) {
+                return false;
+            }
+            catch ( FileNotFoundException ) {
+                return false;
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return null != this._captchaDatabase;
+        }
+
+        public Boolean ConnectDatabase_PastAnswers() {
+            try {
+                Report.Enter();
+
+                this._pastAnswers = new PersistTable<String, String>( Environment.SpecialFolder.CommonApplicationData, "PastAnswers" );
+
+                if ( null != this._pastAnswers ) {
+                    this._autoDisposables.TryAdd( this._captchaDatabase, DateTime.Now );
+                    return true;
+                }
+            }
+            catch ( InvalidOperationException ) {
+
+            }
+            catch ( PathTooLongException ) {
+
+            }
+            catch ( DirectoryNotFoundException ) {
+
+            }
+            catch ( FileNotFoundException ) {
+
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return false;
+        }
+
+        public Boolean ConnectDatabase_Websites() {
+            try {
+                Report.Enter();
+
+                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
+
+                if ( null != this._webSites ) {
+                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
+                }
+            }
+            catch ( InvalidOperationException ) {
+                return false;
+            }
+            catch ( PathTooLongException ) {
+                return false;
+            }
+            catch ( DirectoryNotFoundException ) {
+                return false;
+            }
+            catch ( FileNotFoundException ) {
+                return false;
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return null != this._webSites;
+        }
+
         /// <summary>
         ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
@@ -340,27 +428,6 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
-        /// </summary>
-        /// <param name="uri"></param>
-        [NotNull]
-        public Captcha GetCaptchaData( [NotNull] Uri uri ) {
-            if ( uri == null ) {
-                throw new ArgumentNullException( "uri" );
-            }
-
-            if ( null == this._captchas[ uri.AbsoluteUri ] ) {
-                this._captchas[ uri.AbsoluteUri ] = new Captcha();
-            }
-
-            if ( null == this._captchas[ uri.AbsoluteUri ].Uri ) {
-                this._captchas[ uri.AbsoluteUri ].Uri = uri;
-            }
-
-            return this._captchas[ uri.AbsoluteUri ];
-        }
-
-        /// <summary>
         ///     <para>Load tables.</para>
         /// </summary>
         /// <returns></returns>
@@ -369,7 +436,7 @@ namespace UberScraper {
                 return false;
             }
 
-            await this.LoadDictionaries( this.CancellationTokenSource.Token );
+            await this.ConnectDictionaries( this.CancellationTokenSource.Token );
 
             return true;
         }
@@ -385,93 +452,6 @@ namespace UberScraper {
                             }}
                             {0}", String.Format( "fireEvent({0}, '{1}');", getElementQuery, eventName ) ) );
             }
-        }
-
-        public Boolean LoadCaptchas() {
-            try {
-                Report.Enter();
-
-                this._captchas = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
-
-                if ( null != this._captchas ) {
-                    this._autoDisposables.TryAdd( this._captchas, DateTime.Now );
-                }
-            }
-            catch ( InvalidOperationException ) {
-                return false;
-            }
-            catch ( PathTooLongException ) {
-                return false;
-            }
-            catch ( DirectoryNotFoundException ) {
-                return false;
-            }
-            catch ( FileNotFoundException ) {
-                return false;
-            }
-            finally {
-                Report.Exit();
-            }
-
-            return null != this._captchas;
-        }
-
-        public Boolean LoadPastAnswers() {
-            try {
-                Report.Enter();
-
-                this._pastAnswers = new PersistTable<String, String>( Environment.SpecialFolder.CommonApplicationData, "PastAnswers" );
-
-                if ( null != this._pastAnswers ) {
-                    this._autoDisposables.TryAdd( this._captchas, DateTime.Now );
-                }
-            }
-            catch ( InvalidOperationException ) {
-                return false;
-            }
-            catch ( PathTooLongException ) {
-                return false;
-            }
-            catch ( DirectoryNotFoundException ) {
-                return false;
-            }
-            catch ( FileNotFoundException ) {
-                return false;
-            }
-            finally {
-                Report.Exit();
-            }
-
-            return null != this._captchas;
-        }
-
-        public Boolean LoadWebsites() {
-            try {
-                Report.Enter();
-
-                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
-
-                if ( null != this._webSites ) {
-                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
-                }
-            }
-            catch ( InvalidOperationException ) {
-                return false;
-            }
-            catch ( PathTooLongException ) {
-                return false;
-            }
-            catch ( DirectoryNotFoundException ) {
-                return false;
-            }
-            catch ( FileNotFoundException ) {
-                return false;
-            }
-            finally {
-                Report.Exit();
-            }
-
-            return null != this._webSites;
         }
 
         public Boolean Navigate( [NotNull] String uri ) {
@@ -522,16 +502,18 @@ namespace UberScraper {
                     webBrowser.Source = uri;
 
                     while ( webBrowser.IsLoading || webBrowser.IsNavigating ) {
-                        this.Throttle();
+
                         WebCore.Update();
+                        this.Throttle();
                         Application.DoEvents();
                         if ( this.CancellationTokenSource.Token.IsCancellationRequested ) {
                             break;
                         }
-                        if ( watchdog.Elapsed >= this.NavigationTimeout ) {
-                            Report.Before( "*navigation^timed->out*" );
-                            break;
+                        if ( watchdog.Elapsed < this.NavigationTimeout ) {
+                            continue;
                         }
+                        Report.Before( "*navigation^timed->out*" );
+                        break;
                     }
 
                     Report.After( "done navigating." );
@@ -545,6 +527,23 @@ namespace UberScraper {
             return false;
         }
 
+        /// <summary>
+        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
+        /// </summary>
+        /// <param name="uri"></param>
+        [NotNull]
+        public Captcha PullCaptchaData( [NotNull] Uri uri ) {
+            if ( uri == null ) {
+                throw new ArgumentNullException( "uri" );
+            }
+
+            if ( null == this._captchaDatabase[ uri.AbsoluteUri ] ) {
+                var captcha = new Captcha { Uri = uri};
+                this._captchaDatabase[ uri.AbsoluteUri ] = captcha ;
+            }
+
+            return this._captchaDatabase[ uri.AbsoluteUri ];
+        }
         public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
             this.WebBrowser1 = webBrowser;
         }
@@ -569,7 +568,7 @@ namespace UberScraper {
             if ( null == captcha || null == captcha.Uri ) {
                 return;
             }
-            this._captchas[ captcha.Uri.AbsoluteUri ] = captcha;
+            this._captchaDatabase[ captcha.Uri.AbsoluteUri ] = captcha;
         }
 
         public void VisitSites( CancellationToken cancellationToken ) {
@@ -610,24 +609,26 @@ namespace UberScraper {
             this.UpdateCaptchaData( captcha );
 
             //TODO
+
+
             return false;
         }
 
-        private async Task<bool> LoadDictionaries( CancellationToken token ) {
-            if ( !this.HasWebSitesBeenLoaded ) {
-                this.HasWebSitesBeenLoaded = await Task.Run( () => this.LoadWebsites(), token );
+        private async Task<bool> ConnectDictionaries( CancellationToken token ) {
+            if ( !this.HasWebSitesDatabaseBeenConnected ) {
+                this.HasWebSitesDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Websites(), token );
             }
-            if ( !this.HasCaptchasBeenLoaded ) {
-                this.HasCaptchasBeenLoaded = await Task.Run( () => this.LoadCaptchas(), token );
+            if ( !this.HasCaptchaDatabaseBeenConnected ) {
+                this.HasCaptchaDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Captchas(), token );
             }
-            if ( !this.HasPastAnswersBeenLoaded ) {
-                this.HasPastAnswersBeenLoaded = await Task.Run( () => this.LoadPastAnswers(), token );
+            if ( !this.HasPastAnswersBeenConnected ) {
+                this.HasPastAnswersBeenConnected = await Task.Run( () => this.ConnectDatabase_PastAnswers(), token );
             }
-            return this.HasWebSitesBeenLoaded && this.HasCaptchasBeenLoaded;
+            return this.HasWebSitesDatabaseBeenConnected && this.HasCaptchaDatabaseBeenConnected && this.HasPastAnswersBeenConnected;
         }
 
         private Boolean SolveCaptcha( Uri challenge, CancellationToken cancellationToken ) {
-            var captchaData = this.GetCaptchaData( challenge );
+            var captchaData = this.PullCaptchaData( challenge );
 
             //var bitmapImage = new BitmapImage();
 
@@ -649,12 +650,15 @@ namespace UberScraper {
             }
             var bitmap = captchaData.Image;
 
-            // 3. solve (OCR) the captcha image
-            // 5. respond (type) the response
-            // 6. go onto another page (dont keep retrying on this page until later in the cycles)
+            // solve (OCR) the captcha image
 
-            return this.AttemptOCR( bitmap, onSolve: s => Console.WriteLine( "Solved! {0}", s ), onNotSolve: () => {
-            } );
+            string answer;
+            if ( this.AttemptOCR( captchaData, bitmap, out answer ) && !String.IsNullOrWhiteSpace( answer ) ) {
+                // 5. respond (type) the response
+                return true;
+            }
+
+            return false;
         }
 
         private void StartTheWholeCaptchaThing( CancellationToken cancellationToken ) {
@@ -668,10 +672,10 @@ namespace UberScraper {
 
             // 2. find the captcha image uri
 
-            var captchaData = this.GetCaptchaData( uri );
+            var captchaData = this.PullCaptchaData( uri );
 
             captchaData.Status = CaptchaStatus.SearchingForChallenge;
-            this.UpdateCaptchaData( uri, captchaData );
+            this.UpdateCaptchaData( captchaData );
 
             var captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
 
@@ -698,25 +702,28 @@ namespace UberScraper {
                     captchaData.Image = pictureBoxChallenge.Image.Clone() as Image;
                 }
 
-                this.UpdateCaptchaData( uri, captchaData );
+                this.UpdateCaptchaData( captchaData );
 
                 if ( this.SolveCaptcha( uri, cancellationToken ) ) {
+                    // 6. go onto another page
+
                     return;
                 }
             }
 
             captchaData.Status = CaptchaStatus.ChallengeNotFound;
-            this.UpdateCaptchaData( uri, captchaData );
+            this.UpdateCaptchaData( captchaData );
 
             // ....
             //TODO look for other captcha types
             //TODO solve captcha (or try past answers?)
 
             captchaData.Status = CaptchaStatus.SearchingForChallenge;
-            this.UpdateCaptchaData( uri, captchaData );
+            this.UpdateCaptchaData( captchaData );
         }
 
         private void Throttle( TimeSpan? until = null ) {
+            //TODO look into that semaphore wategate thing...
             if ( !until.HasValue ) {
                 until = Seconds.One;
             }
@@ -725,6 +732,7 @@ namespace UberScraper {
                 Application.DoEvents();
                 if ( watch.Elapsed < until.Value ) {
                     Thread.Sleep( Milliseconds.Hertz111 );
+                    Application.DoEvents();
                 }
                 else {
                     break;

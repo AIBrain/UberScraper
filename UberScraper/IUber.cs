@@ -9,7 +9,7 @@
     public interface IUber : IDisposable {
         Task<Boolean> Init();
 
-        Boolean LoadWebsites();
+        Boolean ConnectDatabase_Websites();
 
         /// <summary>
         /// <seealso cref="Uber.WebBrowser1"/>
