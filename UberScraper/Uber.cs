@@ -635,37 +635,9 @@ namespace UberScraper {
             var captchaData = this.PullCaptchaData( challenge );
 
             if ( captchaData.Image == null ) {
+                captchaData.Status = CaptchaStatus.NoImageFoundToBeSolved;
+                this.UpdateCaptchaData( captchaData );
                 return false;
-            }
-            var bitmap = captchaData.Image;
-
-            var folder = new Folder( Path.GetTempPath() );
-            Document document;
-
-            try {
-                folder.TryGetTempDocument( out document, "png" );
-
-                bitmap.Save( document.FullPathWithFileName, ImageFormat.Png );
-
-                // solve (OCR) the captcha image
-                var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew();
-
-                var page = this.TesseractEngine.Process( img );
-                var text = page.GetText();
-
-                //return text;
-            }
-            finally {
-
-            }
-            answer = null;
-
-            if ( captchaData == null ) {
-                throw new ArgumentNullException( "captcha" );
-            }
-
-            if ( bitmap == null ) {
-                throw new ArgumentNullException( "bitmap" );
             }
 
             if ( captchaData.ImageUri != null ) {
@@ -675,17 +647,25 @@ namespace UberScraper {
             captchaData.Status = CaptchaStatus.SolvingImage;
             this.UpdateCaptchaData( captchaData );
 
-            //TODO
-            if ( false && !String.IsNullOrWhiteSpace( answer ) ) {
+            var bitmap = captchaData.Image;
 
-                // 5. respond (type) the response
-                return true;
-            }
+            var folder = new Folder( Path.GetTempPath() );
 
-            return false;
+            Document document;
+            folder.TryGetTempDocument( out document, "png" );
+
+            bitmap.Save( document.FullPathWithFileName, ImageFormat.Png );
+
+            // solve (OCR) the captcha image
+            var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew();
+
+            var page = this.TesseractEngine.Process( img );
+            answer = page.GetText();
+
+            return !String.IsNullOrWhiteSpace( answer );
         }
 
-        private void StartTheWholeCaptchaThing( CancellationToken cancellationToken ) {
+        private void StartTheCaptchaStuff( CancellationToken cancellationToken ) {
             var uri = GetBrowserLocation( this.WebBrowser1 );
 
             // Check if the page shows any sort of countdown/NotReadyYet
@@ -701,8 +681,8 @@ namespace UberScraper {
             captchaData.Status = CaptchaStatus.SearchingForChallenge;
             this.UpdateCaptchaData( captchaData );
 
+            //method 1
             var captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
-
             var captchaInput = GetElementByID( this.WebBrowser1, "recaptcha_response_field" ); // find the captcha response textbox
 
             if ( null != captchaChallenge && null != captchaInput ) {
@@ -719,11 +699,8 @@ namespace UberScraper {
                     pictureBoxChallenge.Flash();
                     pictureBoxChallenge.Load( captchaChallenge.src );
                     pictureBoxChallenge.Flash();
-
-#if DEBUG
-                    this.Throttle( Seconds.Five );
-#endif
                     captchaData.Image = pictureBoxChallenge.Image.Clone() as Image;
+                    this.Throttle();
                 }
 
                 this.UpdateCaptchaData( captchaData );
@@ -736,19 +713,24 @@ namespace UberScraper {
                     return;
                 }
 
-                captchaData.Status = CaptchaStatus.ChallengeNotSolved;
+                captchaData.Status = CaptchaStatus.ChallengeStillNotSolved;
                 this.UpdateCaptchaData( captchaData );
             }
 
+            //TODO look for other captcha types (methods to find and solve them)
 
-            captchaData.Status = CaptchaStatus.ChallengeNotFound;
-            this.UpdateCaptchaData( captchaData );
+            //method 2 ....
+            if ( false ) {
 
-            // ....
-            //TODO look for other captcha types
-            //TODO solve captcha (or try past answers?)
+                return;
+            }
 
-            captchaData.Status = CaptchaStatus.SearchingForChallenge;
+            //method 3 ....
+            if ( false ) {
+                
+                return;
+            }
+            captchaData.Status = CaptchaStatus.NoChallengesFound;
             this.UpdateCaptchaData( captchaData );
         }
 
@@ -849,7 +831,7 @@ namespace UberScraper {
                     this.Navigate( link );
                     this.Throttle();
                     try {
-                        this.StartTheWholeCaptchaThing( cancellationToken );
+                        this.StartTheCaptchaStuff( cancellationToken );
                     }
                     catch ( Exception exception ) {
                         exception.Error();
