@@ -29,6 +29,7 @@ namespace UberScraper {
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Drawing;
+    using System.Drawing.Imaging;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -42,11 +43,15 @@ namespace UberScraper {
     using Librainian.Annotations;
     using Librainian.Controls;
     using Librainian.Internet;
+    using Librainian.IO;
     using Librainian.Measurement.Time;
     using Librainian.Persistence;
     using Librainian.Threading;
+    using Tesseract;
+    using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
     public class Uber : IUber {
+        public TesseractEngine TesseractEngine;
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
 
         [NotNull]
@@ -88,6 +93,11 @@ namespace UberScraper {
         public Boolean HasPastAnswersBeenConnected {
             get;
             private set;
+        }
+
+        public bool HasTessEngineBeenConnected {
+            get;
+            set;
         }
 
         public Boolean HasWebSitesDatabaseBeenConnected {
@@ -344,16 +354,12 @@ namespace UberScraper {
                 }
             }
             catch ( InvalidOperationException ) {
-
             }
             catch ( PathTooLongException ) {
-
             }
             catch ( DirectoryNotFoundException ) {
-
             }
             catch ( FileNotFoundException ) {
-
             }
             finally {
                 Report.Exit();
@@ -436,9 +442,30 @@ namespace UberScraper {
                 return false;
             }
 
-            await this.ConnectDictionaries( this.CancellationTokenSource.Token );
+            if ( !HasTessEngineBeenConnected ) {
+                HasTessEngineBeenConnected = await Task.Run( () => {
+                    try {
+                        this.TesseractEngine = new TesseractEngine( "tessdata", "eng", EngineMode.Default );
+                        return true;
+                    }
+                    catch ( TesseractException exception ) {
+                        exception.Error();
+                        return false;
+                    }
+                }, this.CancellationTokenSource.Token );
+            }
 
-            return true;
+            if ( !this.HasWebSitesDatabaseBeenConnected ) {
+                this.HasWebSitesDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Websites(), this.CancellationTokenSource.Token );
+            }
+            if ( !this.HasCaptchaDatabaseBeenConnected ) {
+                this.HasCaptchaDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Captchas(), this.CancellationTokenSource.Token );
+            }
+            if ( !this.HasPastAnswersBeenConnected ) {
+                this.HasPastAnswersBeenConnected = await Task.Run( () => this.ConnectDatabase_PastAnswers(), this.CancellationTokenSource.Token );
+            }
+
+            return this.HasWebSitesDatabaseBeenConnected && this.HasCaptchaDatabaseBeenConnected && this.HasPastAnswersBeenConnected;
         }
 
         public void JsFireEvent( string getElementQuery, string eventName ) {
@@ -502,7 +529,6 @@ namespace UberScraper {
                     webBrowser.Source = uri;
 
                     while ( webBrowser.IsLoading || webBrowser.IsNavigating ) {
-
                         WebCore.Update();
                         this.Throttle();
                         Application.DoEvents();
@@ -538,12 +564,15 @@ namespace UberScraper {
             }
 
             if ( null == this._captchaDatabase[ uri.AbsoluteUri ] ) {
-                var captcha = new Captcha { Uri = uri};
-                this._captchaDatabase[ uri.AbsoluteUri ] = captcha ;
+                var captcha = new Captcha {
+                    Uri = uri
+                };
+                this._captchaDatabase[ uri.AbsoluteUri ] = captcha;
             }
 
             return this._captchaDatabase[ uri.AbsoluteUri ];
         }
+
         public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
             this.WebBrowser1 = webBrowser;
         }
@@ -590,10 +619,48 @@ namespace UberScraper {
             return attributes.Length > 0 ? attributes[ 0 ].Description : String.Empty;
         }
 
-        private Boolean AttemptOCR( [NotNull] Captcha captcha, [NotNull] Image bitmap, out String answer ) {
+        /// <summary>
+        /// <para>Pulls the image</para>
+        /// <para>Runs the ocr on it</para>
+        /// <para>fills in the blanks</para>
+        /// <para>submits the page</para>
+        /// </summary>
+        /// <param name="challenge"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="answer"></param>
+        /// <returns></returns>
+        private bool SolveCaptcha( Uri challenge, CancellationToken cancellationToken, out String answer ) {
             answer = null;
 
-            if ( captcha == null ) {
+            var captchaData = this.PullCaptchaData( challenge );
+
+            if ( captchaData.Image == null ) {
+                return false;
+            }
+            var bitmap = captchaData.Image;
+
+            var folder = new Folder( Path.GetTempPath() );
+            Document document;
+
+            try {
+                folder.TryGetTempDocument( out document, "png" );
+
+                bitmap.Save( document.FullPathWithFileName, ImageFormat.Png );
+
+                // solve (OCR) the captcha image
+                var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew();
+
+                var page = this.TesseractEngine.Process( img );
+                var text = page.GetText();
+
+                //return text;
+            }
+            finally {
+
+            }
+            answer = null;
+
+            if ( captchaData == null ) {
                 throw new ArgumentNullException( "captcha" );
             }
 
@@ -601,59 +668,16 @@ namespace UberScraper {
                 throw new ArgumentNullException( "bitmap" );
             }
 
-            if ( captcha.ImageUri != null ) {
-                Console.WriteLine( "Attempting OCR on {0}", captcha.ImageUri.AbsolutePath );
+            if ( captchaData.ImageUri != null ) {
+                Console.WriteLine( "Attempting OCR on {0}", captchaData.ImageUri.AbsolutePath );
             }
 
-            captcha.Status = CaptchaStatus.SolvingImage;
-            this.UpdateCaptchaData( captcha );
+            captchaData.Status = CaptchaStatus.SolvingImage;
+            this.UpdateCaptchaData( captchaData );
 
             //TODO
+            if ( false && !String.IsNullOrWhiteSpace( answer ) ) {
 
-
-            return false;
-        }
-
-        private async Task<bool> ConnectDictionaries( CancellationToken token ) {
-            if ( !this.HasWebSitesDatabaseBeenConnected ) {
-                this.HasWebSitesDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Websites(), token );
-            }
-            if ( !this.HasCaptchaDatabaseBeenConnected ) {
-                this.HasCaptchaDatabaseBeenConnected = await Task.Run( () => this.ConnectDatabase_Captchas(), token );
-            }
-            if ( !this.HasPastAnswersBeenConnected ) {
-                this.HasPastAnswersBeenConnected = await Task.Run( () => this.ConnectDatabase_PastAnswers(), token );
-            }
-            return this.HasWebSitesDatabaseBeenConnected && this.HasCaptchaDatabaseBeenConnected && this.HasPastAnswersBeenConnected;
-        }
-
-        private Boolean SolveCaptcha( Uri challenge, CancellationToken cancellationToken ) {
-            var captchaData = this.PullCaptchaData( challenge );
-
-            //var bitmapImage = new BitmapImage();
-
-            //bitmapImage.DecodeFailed += ( sender, args ) => {
-            //    isImageGood = false;
-            //};
-            //bitmapImage.DownloadFailed += ( sender, args ) => {
-            //    isImageGood = false;
-            //};
-            //bitmapImage.DownloadCompleted += ( sender, args ) => {
-            //    isImageGood = true;
-            //};
-            //bitmapImage.BeginInit();
-            //bitmapImage.UriSource = captchaChallenge;
-            //bitmapImage.EndInit();
-
-            if ( captchaData.Image == null ) {
-                return false;
-            }
-            var bitmap = captchaData.Image;
-
-            // solve (OCR) the captcha image
-
-            string answer;
-            if ( this.AttemptOCR( captchaData, bitmap, out answer ) && !String.IsNullOrWhiteSpace( answer ) ) {
                 // 5. respond (type) the response
                 return true;
             }
@@ -704,12 +728,18 @@ namespace UberScraper {
 
                 this.UpdateCaptchaData( captchaData );
 
-                if ( this.SolveCaptcha( uri, cancellationToken ) ) {
-                    // 6. go onto another page
+                String answer;
+                if ( this.SolveCaptcha( uri, cancellationToken, out answer ) ) {
+                    captchaData.Status = CaptchaStatus.SolvedChallenge;
+                    this.UpdateCaptchaData( captchaData );
 
                     return;
                 }
+
+                captchaData.Status = CaptchaStatus.ChallengeNotSolved;
+                this.UpdateCaptchaData( captchaData );
             }
+
 
             captchaData.Status = CaptchaStatus.ChallengeNotFound;
             this.UpdateCaptchaData( captchaData );
@@ -723,6 +753,7 @@ namespace UberScraper {
         }
 
         private void Throttle( TimeSpan? until = null ) {
+
             //TODO look into that semaphore wategate thing...
             if ( !until.HasValue ) {
                 until = Seconds.One;
