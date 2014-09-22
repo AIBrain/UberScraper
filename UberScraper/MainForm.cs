@@ -88,7 +88,7 @@
             }
         }
 
-        private async void buttonStart_Click( object sender, EventArgs e ) {
+        private void buttonStart_Click( object sender, EventArgs e ) {
             Console.WriteLine( "Website visit start requested..." );
             try {
                 this.buttonStart.Usable( false );
@@ -98,7 +98,8 @@
                     return;
                 }
                 //await Task.Run( () => 
-                uber.VisitSites( CancellationTokenSource );
+                uber.PictureBoxChallenge = this.pictureBoxChallenge;
+                uber.VisitSites( CancellationTokenSource.Token );
                 //);
             }
             finally {

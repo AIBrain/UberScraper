@@ -1,43 +1,46 @@
 ﻿#region License & Information
+
 // This notice must be kept visible in the source.
-// 
+//
 // This section of source code belongs to Rick@AIBrain.Org unless otherwise specified,
 // or the original license has been overwritten by the automatic formatting of this code.
 // Any unmodified sections of source code borrowed from other projects retain their original license and thanks goes to the Authors.
-// 
+//
 // Donations and Royalties can be paid via
 // PayPal: paypal@aibrain.org
 // bitcoin:1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
 // bitcoin:1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
 // litecoin:LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
-// 
+//
 // Usage of the source code or compiled binaries is AS-IS.
 // I am not responsible for Anything You Do.
-// 
+//
 // Contact me by email if you have any questions or helpful criticism.
-// 
-// "UberScraper/Uber.cs" was last cleaned by Rick on 2014/09/15 at 4:50 PM
-#endregion
+//
+// "UberScraper/Uber.cs" was last cleaned by Rick on 2014/09/22 at 11:04 AM
+
+#endregion License & Information
 
 namespace UberScraper {
+
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
-    using System.Windows.Media.Imaging;
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
     using CsQuery;
-    using CsQuery.ExtensionMethods.Internal;
     using FluentAssertions;
     using Librainian;
     using Librainian.Annotations;
+    using Librainian.Controls;
     using Librainian.Internet;
     using Librainian.Measurement.Time;
     using Librainian.Persistence;
@@ -48,6 +51,9 @@ namespace UberScraper {
 
         [NotNull]
         private PersistTable<String, Captcha> _captchas;
+
+        [NotNull]
+        private PersistTable<String, String> _pastAnswers;
 
         private WebControl _webBrowser1;
 
@@ -79,6 +85,11 @@ namespace UberScraper {
             private set;
         }
 
+        public Boolean HasPastAnswersBeenLoaded {
+            get;
+            private set;
+        }
+
         public Boolean HasWebSitesBeenLoaded {
             get;
             private set;
@@ -88,6 +99,12 @@ namespace UberScraper {
         ///     <para>Defaults to <see cref="Seconds.Thirty" /> in the ctor.</para>
         /// </summary>
         public TimeSpan NavigationTimeout {
+            get;
+            set;
+        }
+
+        [CanBeNull]
+        public PictureBox PictureBoxChallenge {
             get;
             set;
         }
@@ -103,6 +120,7 @@ namespace UberScraper {
                 if ( value == null ) {
                     return;
                 }
+
                 //this._webBrowser1.LoadingFrameComplete += ( sender, args ) => { };
                 this._autoDisposables.TryAdd( value, DateTime.Now );
             }
@@ -119,79 +137,26 @@ namespace UberScraper {
                 if ( value == null ) {
                     return;
                 }
+
                 //this._webBrowser2.LoadingFrameComplete += ( sender, args ) => { };
                 this._autoDisposables.TryAdd( value, DateTime.Now );
             }
         }
 
-        /// <summary>
-        ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose() {
-            try {
-                Report.Enter();
+        public static IEnumerable<Uri> GetAllLinks( WebControl webBrowser ) {
+            var html = GetBrowserHTML( webBrowser );
 
-                foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
-                    try {
-                        Console.Write( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
-                        disposable.Key.Dispose();
-                        Console.WriteLine( String.Format( "Disposed.", disposable.Key.ToString() ) );
-                    }
-                    catch ( Exception exception ) {
-                        exception.Error();
-                    }
+            var cq = new CQ( html, HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
+
+            var anchors = cq[ "a" ].ToList();
+
+            foreach ( var href in anchors.Select( domObject => domObject[ "href" ] ) ) {
+                Uri uri;
+                if ( !Uri.TryCreate( href, UriKind.Absolute, out uri ) ) {
+                    continue;
                 }
+                yield return uri;
             }
-            finally {
-                Report.Exit();
-            }
-        }
-
-        public Boolean LoadWebsites() {
-            try {
-                Report.Enter();
-
-                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
-
-                if ( null != this._webSites ) {
-                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
-                }
-            }
-            catch ( InvalidOperationException ) {
-                return false;
-            }
-            catch ( PathTooLongException ) {
-                return false;
-            }
-            catch ( DirectoryNotFoundException ) {
-                return false;
-            }
-            catch ( FileNotFoundException ) {
-                return false;
-            }
-            finally {
-                Report.Exit();
-            }
-
-            return null != this._webSites;
-        }
-
-        public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
-            this.WebBrowser1 = webBrowser;
-        }
-
-        /// <summary>
-        ///     <para>Load tables.</para>
-        /// </summary>
-        /// <returns></returns>
-        public async Task<Boolean> Init() {
-            if ( this.CancellationTokenSource.IsCancellationRequested ) {
-                return false;
-            }
-
-            await this.LoadDictionaries( this.CancellationTokenSource.Token );
-
-            return true;
         }
 
         [CanBeNull]
@@ -210,6 +175,26 @@ namespace UberScraper {
                 exception.Error();
             }
             return null;
+        }
+
+        /// <summary>
+        ///     Retrieve the <see cref="Uri" /> the <see cref="WebBrowser1" /> is currently at.
+        /// </summary>
+        /// <param name="webBrowser"></param>
+        /// <returns></returns>
+        [NotNull]
+        public static Uri GetBrowserLocation( WebControl webBrowser ) {
+            try {
+                var browser = webBrowser;
+                if ( browser != null ) {
+                    var result = browser.Invoke( new Func<Uri>( () => browser.Source ) );
+                    return ( Uri )result;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return new Uri( "about:blank" );
         }
 
         [CanBeNull]
@@ -247,7 +232,6 @@ namespace UberScraper {
                         }
                     } ) );
                     return answer;
-
                 }
             }
             catch ( Exception exception ) {
@@ -273,25 +257,6 @@ namespace UberScraper {
                         }
                     } ) );
                     return answer;
-
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return null;
-        }
-
-        [CanBeNull]
-        public static dynamic PushButton( WebControl webBrowser, String type, int index ) {
-            try {
-                if ( webBrowser != null ) {
-                    var answer = webBrowser.Invoke( new Func<JSObject>( () => {
-                        dynamic document = ( JSObject )webBrowser.ExecuteJavascriptWithResult( String.Format( "document.getElementsByTagName('submit')[{0}].click();", index ) );
-                        return document;
-                    } ) );
-                    return answer;
-
                 }
             }
             catch ( Exception exception ) {
@@ -321,80 +286,43 @@ namespace UberScraper {
             return false;
         }
 
-        /*
-                /// <summary>
-                /// </summary>
-                /// <param name="webBrowser"></param>
-                /// <param name="javascript"></param>
-                /// <param name="result"></param>
-                /// <returns></returns>
-                public static Boolean GetJavascriptWithResultArray( WebControl webBrowser, String javascript, out JSValue[] result ) {
-                    result = default( JSValue[] );
-                    if ( webBrowser == null ) {
-                        return false;
-                    }
+        [CanBeNull]
+        public static dynamic PushButton( WebControl webBrowser, String type, int index ) {
+            try {
+                if ( webBrowser != null ) {
+                    var answer = webBrowser.Invoke( new Func<JSObject>( () => {
+                        dynamic document = ( JSObject )webBrowser.ExecuteJavascriptWithResult( String.Format( "document.getElementsByTagName('submit')[{0}].click();", index ) );
+                        return document;
+                    } ) );
+                    return answer;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return null;
+        }
+
+        /// <summary>
+        ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose() {
+            try {
+                Report.Enter();
+
+                foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                     try {
-                        var links = new JSValue[] { };
-
-                        //dynamic localresult = null;
-                        //dynamic links = null;
-
-                        webBrowser.Invoke( new Action( () => {
-                            //var bob = new CQ(
-
-                            //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                            //var aresult = (JSObject)browser.ExecuteJavascriptWithResult( javascript );
-                            var aresult = webBrowser.ExecuteJavascriptWithResult( String.Format( "(function(){{ {0} }})()", javascript ) );
-                            try {
-                                //links = aresult.getElementsByTagName( 'a' );
-
-                                links = ( JSValue[] )aresult;
-                            }
-                            catch ( InvalidOperationException ) {
-                            }
-                        } ) );
-
-                        //foreach ( var link in links ) {
-                        //    Console.WriteLine( link as object );
-                        //}
-
-                        result = links;
-
-                        return true;
+                        Console.Write( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
+                        disposable.Key.Dispose();
+                        Console.WriteLine( String.Format( "Disposed.", disposable.Key.ToString() ) );
                     }
                     catch ( Exception exception ) {
                         exception.Error();
                     }
-                    return false;
                 }
-        */
-
-        /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha"/>.</para>
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="value"></param>
-        public Captcha this[ [CanBeNull] Uri uri ] {
-            set {
-                if ( null == uri || null == value ) {
-                    return;
-                }
-                this._captchas[ uri.AbsoluteUri ] = value;
             }
-            get {
-                if ( null == uri ) {
-                    return new Captcha();
-                }
-
-                if ( null == this._captchas[ uri.AbsoluteUri ] ) {
-                    this._captchas[ uri.AbsoluteUri ] = new Captcha();
-                }
-
-                if ( null == this._captchas[ uri.AbsoluteUri ].Uri ) {
-                    this._captchas[ uri.AbsoluteUri ].Uri = uri;
-                }
-
-                return this._captchas[ uri.AbsoluteUri ];
+            finally {
+                Report.Exit();
             }
         }
 
@@ -411,86 +339,40 @@ namespace UberScraper {
             this._webSites[ uri.AbsoluteUri ].Location = uri;
         }
 
-        public static IEnumerable<Uri> GetAllLinks( WebControl webBrowser ) {
-            //var allLinks = new List<Uri>( 128 );
-            //const string javascript = " var arr = []; var l = document.getElementsByTagName('a'); for ( var i=0; i<l.length; i++) { arr.push(l[i].href); }  ";
-            //const string javascript = " var arr = []; var l = document.getElementsByTagName('a'); for ( var i=0; i<l.length; i++) { arr.push(l[i].href); }; return arr; ";
-            //const string javascript = " document.getElementsByTagName('a'); ";
-            //const string javascript = "document";
-            //const string javascript = "document.links";
-            //const string javascript = "document.links";
-
-            var html = GetBrowserHTML( webBrowser );
-
-            var cq = new CQ( html, HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
-
-            var anchors = cq[ "a" ].ToList();
-
-            foreach ( var href in anchors.Select( domObject => domObject[ "href" ] ) ) {
-                Uri uri;
-                if ( !Uri.TryCreate( href, UriKind.Absolute, out uri ) ) {
-                    continue;
-                }
-                yield return uri;
+        /// <summary>
+        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
+        /// </summary>
+        /// <param name="uri"></param>
+        [NotNull]
+        public Captcha GetCaptchaData( [NotNull] Uri uri ) {
+            if ( uri == null ) {
+                throw new ArgumentNullException( "uri" );
             }
+
+            if ( null == this._captchas[ uri.AbsoluteUri ] ) {
+                this._captchas[ uri.AbsoluteUri ] = new Captcha();
+            }
+
+            if ( null == this._captchas[ uri.AbsoluteUri ].Uri ) {
+                this._captchas[ uri.AbsoluteUri ].Uri = uri;
+            }
+
+            return this._captchas[ uri.AbsoluteUri ];
         }
 
         /// <summary>
-        ///     Retrieve the <see cref="Uri" /> the <see cref="WebBrowser1" /> is currently at.
+        ///     <para>Load tables.</para>
         /// </summary>
-        /// <param name="webBrowser"></param>
         /// <returns></returns>
-        [NotNull]
-        public static Uri GetBrowserLocation( WebControl webBrowser ) {
-            try {
-                var browser = webBrowser;
-                if ( browser != null ) {
-                    var result = browser.Invoke( new Func<Uri>( () => browser.Source ) );
-                    return ( Uri )result;
-                }
+        public async Task<Boolean> Init() {
+            if ( this.CancellationTokenSource.IsCancellationRequested ) {
+                return false;
             }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return new Uri( "about:blank" );
+
+            await this.LoadDictionaries( this.CancellationTokenSource.Token );
+
+            return true;
         }
-
-        /*
-                [ CanBeNull ]
-                public String GetBrowserHTMLCleaned() {
-                    var badhtml = GetBrowserHTML( this.WebBrowser1 );
-                    if ( null == badhtml ) {
-                        return null;
-                    }
-
-                    var dan = new Tidy();
-
-                    //dan.Options.DocType = DocType.Auto;
-                    //dan.Options.DropEmptyParas = false;
-                    //dan.Options.DropFontTags = false;
-                    //dan.Options.FixComments = true;
-                    //dan.Options.FixBackslash = true;
-                    ////dan.Options.MakeClean = true;
-                    //dan.Options.SmartIndent = true;
-                    //dan.Options.Xhtml = true;
-                    dan.Options.XmlOut = true;
-
-                    var tidyMessageCollection = new TidyMessageCollection();
-                    var newhtml = dan.Parse( badhtml, tidyMessageCollection );
-
-                    return newhtml;
-
-                    //var bob =new SanitizedMarkup( html, false );
-
-                    //    //. Sanitizer.SanitizeMarkup( html );
-
-                    ////var bob = new StringWriter();
-                    ////bob.Write( html  );
-                    ////var reader = Html2Xhtml.RunAsFilter( writer => { }, dosEndOfLine: true );
-                    //var newhtml = bob.ToString();
-                    //return html;
-                }
-        */
 
         public void JsFireEvent( string getElementQuery, string eventName ) {
             var browser = this.WebBrowser1;
@@ -534,16 +416,67 @@ namespace UberScraper {
             return null != this._captchas;
         }
 
-        ///// <summary>
-        /////     <para>Starts a <see cref="Task" /> to navigate to the specified <paramref name="uri" />.</para>
-        ///// </summary>
-        ///// <param name="uri"></param>
-        ///// <returns></returns>
-        //public Task Navigate( [NotNull] Uri uri ) {
-        //    return Task.Run( () => {
-        //        this.NavigateTo( uri );
-        //    } );
-        //}
+        public Boolean LoadPastAnswers() {
+            try {
+                Report.Enter();
+
+                this._pastAnswers = new PersistTable<String, String>( Environment.SpecialFolder.CommonApplicationData, "PastAnswers" );
+
+                if ( null != this._pastAnswers ) {
+                    this._autoDisposables.TryAdd( this._captchas, DateTime.Now );
+                }
+            }
+            catch ( InvalidOperationException ) {
+                return false;
+            }
+            catch ( PathTooLongException ) {
+                return false;
+            }
+            catch ( DirectoryNotFoundException ) {
+                return false;
+            }
+            catch ( FileNotFoundException ) {
+                return false;
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return null != this._captchas;
+        }
+
+        public Boolean LoadWebsites() {
+            try {
+                Report.Enter();
+
+                this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
+
+                if ( null != this._webSites ) {
+                    this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
+                }
+            }
+            catch ( InvalidOperationException ) {
+                return false;
+            }
+            catch ( PathTooLongException ) {
+                return false;
+            }
+            catch ( DirectoryNotFoundException ) {
+                return false;
+            }
+            catch ( FileNotFoundException ) {
+                return false;
+            }
+            finally {
+                Report.Exit();
+            }
+
+            return null != this._webSites;
+        }
+
+        public Boolean Navigate( [NotNull] String uri ) {
+            return this.Navigate( new Uri( uri ) );
+        }
 
         ///// <summary>
         /////     <para>Starts a <see cref="Task" /> to navigate to the specified <paramref name="uriString" />.</para>
@@ -558,11 +491,6 @@ namespace UberScraper {
         //        }
         //    } );
         //}
-
-        public Boolean Navigate( [NotNull] String uri ) {
-            return this.Navigate( new Uri( uri ) );
-        }
-
         /// <summary>
         ///     <para>No guarantee that more ajax/javascript can and will fire off after this is 'true'.</para>
         ///     <para>Internal while loop blocks.</para>
@@ -587,7 +515,6 @@ namespace UberScraper {
                     return false;
                 }
                 webBrowser.Invoke( method: new Action( () => {
-
                     Report.Before( String.Format( "Navigating to {0}...", uri ) );
 
                     this.EnsureWebsite( uri );
@@ -601,7 +528,7 @@ namespace UberScraper {
                         if ( this.CancellationTokenSource.Token.IsCancellationRequested ) {
                             break;
                         }
-                        if ( watchdog.Elapsed >= NavigationTimeout ) {
+                        if ( watchdog.Elapsed >= this.NavigationTimeout ) {
                             Report.Before( "*navigation^timed->out*" );
                             break;
                         }
@@ -618,6 +545,10 @@ namespace UberScraper {
             return false;
         }
 
+        public void SetBrowser( [CanBeNull] WebControl webBrowser ) {
+            this.WebBrowser1 = webBrowser;
+        }
+
         public void Stop() {
             Console.WriteLine( "Requesting source token cancel..." );
             this.CancellationTokenSource.Cancel();
@@ -627,6 +558,18 @@ namespace UberScraper {
                 Console.WriteLine( "Requesting browser stops..." );
                 webBrowser.Stop();
             }
+        }
+
+        /// <summary>
+        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="captcha"></param>
+        public void UpdateCaptchaData( Captcha captcha ) {
+            if ( null == captcha || null == captcha.Uri ) {
+                return;
+            }
+            this._captchas[ captcha.Uri.AbsoluteUri ] = captcha;
         }
 
         public void VisitSites( CancellationToken cancellationToken ) {
@@ -648,59 +591,26 @@ namespace UberScraper {
             return attributes.Length > 0 ? attributes[ 0 ].Description : String.Empty;
         }
 
-        /// <summary>
-        ///     Pull the image locally so we can take a look at it.
-        /// </summary>
-        /// <param name="challenge"></param>
-        /// <param name="captchaChallenge"></param>
-        /// <param name="captchaInput"></param>
-        /// <param name="cancellationToken"></param>
-        private void GetCaptcha( Uri challenge, dynamic captchaChallenge, dynamic captchaInput, CancellationToken cancellationToken ) {
-            try {
-                Report.Enter();
+        private Boolean AttemptOCR( [NotNull] Captcha captcha, [NotNull] Image bitmap, out String answer ) {
+            answer = null;
 
-                if ( cancellationToken.IsCancellationRequested ) {
-                    return;
-                }
-                try {
-                    var isImageGood = true;
-
-                    var bitmapImage = new BitmapImage();
-
-                    bitmapImage.DecodeFailed += ( sender, args ) => {
-                        isImageGood = false;
-                    };
-                    bitmapImage.DownloadFailed += ( sender, args ) => {
-                        isImageGood = false;
-                    };
-                    bitmapImage.DownloadCompleted += ( sender, args ) => {
-                        isImageGood = true;
-                    };
-                    bitmapImage.BeginInit();
-                    bitmapImage.UriSource = captchaChallenge;
-                    bitmapImage.EndInit();
-
-                    if ( cancellationToken.IsCancellationRequested ) {
-                        return;
-                    }
-
-                    if ( isImageGood && bitmapImage.Width > 0 && bitmapImage.Height > 0 ) {
-                        var captcha = this[ captchaChallenge ];
-                        captcha.Status = CaptchaStatus.LoadedImage;
-                        this[ challenge ] = captcha;
-                    }
-                }
-                catch ( Exception exception ) {
-                    this[ captchaChallenge ].Status = CaptchaStatus.ErrorLoadingImage;
-                    exception.Error();
-                }
+            if ( captcha == null ) {
+                throw new ArgumentNullException( "captcha" );
             }
-            catch ( Exception exception ) {
-                exception.Error();
+
+            if ( bitmap == null ) {
+                throw new ArgumentNullException( "bitmap" );
             }
-            finally {
-                Report.Exit();
+
+            if ( captcha.ImageUri != null ) {
+                Console.WriteLine( "Attempting OCR on {0}", captcha.ImageUri.AbsolutePath );
             }
+
+            captcha.Status = CaptchaStatus.SolvingImage;
+            this.UpdateCaptchaData( captcha );
+
+            //TODO
+            return false;
         }
 
         private async Task<bool> LoadDictionaries( CancellationToken token ) {
@@ -710,97 +620,100 @@ namespace UberScraper {
             if ( !this.HasCaptchasBeenLoaded ) {
                 this.HasCaptchasBeenLoaded = await Task.Run( () => this.LoadCaptchas(), token );
             }
+            if ( !this.HasPastAnswersBeenLoaded ) {
+                this.HasPastAnswersBeenLoaded = await Task.Run( () => this.LoadPastAnswers(), token );
+            }
             return this.HasWebSitesBeenLoaded && this.HasCaptchasBeenLoaded;
         }
 
+        private Boolean SolveCaptcha( Uri challenge, CancellationToken cancellationToken ) {
+            var captchaData = this.GetCaptchaData( challenge );
+
+            //var bitmapImage = new BitmapImage();
+
+            //bitmapImage.DecodeFailed += ( sender, args ) => {
+            //    isImageGood = false;
+            //};
+            //bitmapImage.DownloadFailed += ( sender, args ) => {
+            //    isImageGood = false;
+            //};
+            //bitmapImage.DownloadCompleted += ( sender, args ) => {
+            //    isImageGood = true;
+            //};
+            //bitmapImage.BeginInit();
+            //bitmapImage.UriSource = captchaChallenge;
+            //bitmapImage.EndInit();
+
+            if ( captchaData.Image == null ) {
+                return false;
+            }
+            var bitmap = captchaData.Image;
+
+            // 3. solve (OCR) the captcha image
+            // 5. respond (type) the response
+            // 6. go onto another page (dont keep retrying on this page until later in the cycles)
+
+            return this.AttemptOCR( bitmap, onSolve: s => Console.WriteLine( "Solved! {0}", s ), onNotSolve: () => {
+            } );
+        }
+
         private void StartTheWholeCaptchaThing( CancellationToken cancellationToken ) {
-
             var uri = GetBrowserLocation( this.WebBrowser1 );
-            var captcha = this[ uri ];
 
-            // 1. check if the page shows any sort of countdown/notreadyyet
+            // Check if the page shows any sort of countdown/NotReadyYet
             var text = GetBrowserText( this.WebBrowser1 ) ?? String.Empty;
             if ( text.Contains( "You must wait" ) ) {
                 return;
             }
 
             // 2. find the captcha image uri
-            // 3. solve (OCR) the captcha image
-            // 4. find the captcha response textbox
-            // 5. respond (type) the response
-            // 6. go onto another page (dont keep retrying on this page until later in the cycles)
 
-            captcha.Status = CaptchaStatus.ChallengeSearchingFor;
-            this[ uri ] = captcha;
+            var captchaData = this.GetCaptchaData( uri );
 
-            dynamic submitButton = null;
-            dynamic captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
-            dynamic captchaInput = GetElementByID( this.WebBrowser1, "recaptcha_response_field" );
+            captchaData.Status = CaptchaStatus.SearchingForChallenge;
+            this.UpdateCaptchaData( uri, captchaData );
 
-            dynamic buttons = GetElementsByTagName( this.WebBrowser1, "document.getElementsByTagName('button');" );
-            if ( null == buttons ) {
-                return;
-            }
+            var captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
 
-            for ( var i = 0 ; i < buttons.length ; i++ ) {
-                var button = buttons[ i ];
-                if ( "submit" == button.getAttribute( "type" ) ) {
-                    submitButton = button;
-                }
-            }
-
+            var captchaInput = GetElementByID( this.WebBrowser1, "recaptcha_response_field" ); // find the captcha response textbox
 
             if ( null != captchaChallenge && null != captchaInput ) {
-                captcha.Status = CaptchaStatus.ChallengeFound;
-                captcha.ResponseID = "recaptcha_challenge_image";
-                captcha.ResponseID = "recaptcha_response_field";
-                if ( submitButton != null ) {
-                    captcha.SubmitID = submitButton.id;
-                }
-                this[ uri ] = captcha;
+                captchaData.Status = CaptchaStatus.ChallengeFound;
 
-                this.GetCaptcha( challenge: uri, captchaChallenge: captchaChallenge, captchaInput: captchaInput, cancellationToken: cancellationToken );
-                return;
+                captchaData.ChallengeElementID = captchaChallenge.id;
+
+                captchaData.ResponseElementID = captchaInput.id;
+
+                captchaData.ImageUri = new Uri( captchaChallenge.src );
+
+                var pictureBoxChallenge = this.PictureBoxChallenge;
+                if ( pictureBoxChallenge != null ) {
+                    pictureBoxChallenge.Flash();
+                    pictureBoxChallenge.Load( captchaChallenge.src );
+                    pictureBoxChallenge.Flash();
+
+#if DEBUG
+                    this.Throttle( Seconds.Five );
+#endif
+                    captchaData.Image = pictureBoxChallenge.Image.Clone() as Image;
+                }
+
+                this.UpdateCaptchaData( uri, captchaData );
+
+                if ( this.SolveCaptcha( uri, cancellationToken ) ) {
+                    return;
+                }
             }
 
-            //var html = GetBrowserHTML( this.WebBrowser1 );
+            captchaData.Status = CaptchaStatus.ChallengeNotFound;
+            this.UpdateCaptchaData( uri, captchaData );
 
-            //var cq = new CQ( html, HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
+            // ....
+            //TODO look for other captcha types
+            //TODO solve captcha (or try past answers?)
 
-            //if ( cq.IsNullOrEmpty() ) {
-            //    captcha.Status = CaptchaStatus.ChallengeNotFound;
-            //    this[ uri ] = captcha;
-            //    return;
-            //}
-
-
-            //var captchaChallenge = cq[ "recaptcha_challenge_image" ];
-
-            //if ( captchaChallenge.IsNullOrEmpty() ) {
-            //    var captchaChallenges = cq[ "adcopy-puzzle-image" ][ "img" ].ToList();
-            //}
-
-            //if ( captchaChallenge.IsNullOrEmpty() ) {
-            //    captcha.Status = CaptchaStatus.ChallengeNotFound;
-            //    this[ uri ] = captcha;
-            //    return;
-            //}
-
-            //captcha.Status = CaptchaStatus.ChallengeFound;
-            //this[ uri ] = captcha;
-
-            //var captchaResponse = cq[ "" ];
-
-            //if ( cancellationToken.IsCancellationRequested ) {
-            //    return;
-            //}
-
-            //if ( null != captchaChallenge && null != captchaResponse ) {
-            //    this.GetCaptcha( uri, captchaChallenge, captchaResponse, cancellationToken );
-            //}
-
-            //TODO look for other captcha
-            //TODO solve captcha (or try past answers)
+            captchaData.Status = CaptchaStatus.SearchingForChallenge;
+            this.UpdateCaptchaData( uri, captchaData );
         }
 
         private void Throttle( TimeSpan? until = null ) {
@@ -825,7 +738,7 @@ namespace UberScraper {
 
         private void Visit( BitcoinFaucets faucetID, CancellationToken cancellationToken ) {
             try {
-                var description = GetDescription( faucetID );   //in BitcoinFaucets case, the description is a uri
+                var description = GetDescription( faucetID ); //in BitcoinFaucets case, the description is a uri
                 if ( String.IsNullOrWhiteSpace( description ) ) {
                     return;
                 }
@@ -833,8 +746,7 @@ namespace UberScraper {
                 var uri = new Uri( description );
                 Console.WriteLine( "Visiting (#{0}) {1} @ {2}", faucetID, description, uri.PathAndQuery );
 
-
-                var navigated = this.Navigate( description );   //.Wait( ( int )this.NavigationTimeout.TotalMilliseconds, cancellationTokenSource.Token );
+                var navigated = this.Navigate( description );
 
                 if ( !navigated ) {
                     faucetID = BitcoinFaucets.AboutBlank;
@@ -845,7 +757,7 @@ namespace UberScraper {
 
                 switch ( faucetID ) {
                     case BitcoinFaucets.BitChestDotMe:
-                        this.Visit_BitChestDotMe( "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationTokenSource.Token );
+                        this.Visit_BitChestDotMe( "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationToken );
                         break;
 
                     case BitcoinFaucets.LandOfBitCoinDotCom:
@@ -872,7 +784,9 @@ namespace UberScraper {
 
         private void Visit_BitChestDotMe( string bitcoinAddress, CancellationToken cancellationToken ) {
             Report.Enter();
-            if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {   //.Wait( this.NavigationTimeout ) ) 
+            if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {
+
+                //.Wait( this.NavigationTimeout ) )
                 return;
             }
 
@@ -891,7 +805,7 @@ namespace UberScraper {
                     return;
                 }
                 try {
-                    this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) );   //.Wait( this.NavigationTimeout );
+                    this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
                     this.Throttle();
                     this.Navigate( link );
                     this.Throttle();
@@ -916,7 +830,9 @@ namespace UberScraper {
         }
 
         private void Visit_LandOfBitCoinDotCom() {
-            if ( !this.Navigate( "https://www.landofbitcoin.com/login" ) ) {    //.Wait( this.NavigationTimeout )
+            if ( !this.Navigate( "https://www.landofbitcoin.com/login" ) ) {
+
+                //.Wait( this.NavigationTimeout )
                 return;
             }
 
