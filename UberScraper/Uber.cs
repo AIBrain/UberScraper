@@ -40,9 +40,11 @@ namespace UberScraper {
     using FluentAssertions;
     using Librainian;
     using Librainian.Annotations;
+    using Librainian.Collections;
     using Librainian.Controls;
     using Librainian.Internet;
     using Librainian.IO;
+    using Librainian.Linguistics;
     using Librainian.Measurement.Time;
     using Librainian.Persistence;
     using Librainian.Threading;
@@ -50,7 +52,10 @@ namespace UberScraper {
     using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
     public class Uber : IUber {
+
+        [CanBeNull]
         public TesseractEngine TesseractEngine;
+
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
 
         [NotNull]
@@ -249,6 +254,45 @@ namespace UberScraper {
             return null;
         }
 
+        public static Boolean ByIDSetValue( WebControl webBrowser, String id, String text ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).value=\"{1}\";", id, text ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
+        public static Boolean ByIDFunction( WebControl webBrowser, String id, String function ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).{1}();", id, function ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
+        public static Boolean ClickSubmit( WebControl webBrowser, Byte index = 0 ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.querySelectorAll(\"button[type='submit']\")[{0}].click();", index ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
         [CanBeNull]
         public static dynamic GetElementsByTagName( WebControl webBrowser, String type ) {
             try {
@@ -444,8 +488,8 @@ namespace UberScraper {
             if ( !HasTessEngineBeenConnected ) {
                 HasTessEngineBeenConnected = await Task.Run( () => {
                     try {
-                        this.TesseractEngine = new TesseractEngine( "tessdata", "eng", EngineMode.Default );
-                        return true;
+                        this.TesseractEngine = new TesseractEngine( @"tessdata", "eng", EngineMode.Default );
+                        return null != this.TesseractEngine;
                     }
                     catch ( TesseractException exception ) {
                         exception.Error();
@@ -464,7 +508,7 @@ namespace UberScraper {
                 this.HasPastAnswersBeenConnected = await Task.Run( () => this.ConnectDatabase_PastAnswers(), this.CancellationTokenSource.Token );
             }
 
-            return this.HasWebSitesDatabaseBeenConnected && this.HasCaptchaDatabaseBeenConnected && this.HasPastAnswersBeenConnected;
+            return HasTessEngineBeenConnected && this.HasWebSitesDatabaseBeenConnected && this.HasCaptchaDatabaseBeenConnected && this.HasPastAnswersBeenConnected;
         }
 
         public void JsFireEvent( string getElementQuery, string eventName ) {
@@ -583,7 +627,8 @@ namespace UberScraper {
             var webBrowser = this.WebBrowser1;
             if ( webBrowser != null ) {
                 Console.WriteLine( "Requesting browser stops..." );
-                webBrowser.Stop();
+                webBrowser.Invoke( new Action( webBrowser.Stop ) );
+
             }
         }
 
@@ -630,6 +675,10 @@ namespace UberScraper {
         /// <returns></returns>
         private bool SolveCaptcha( Uri challenge, CancellationToken cancellationToken, out String answer ) {
             answer = null;
+            var tesseractEngine = this.TesseractEngine;
+            if ( null == tesseractEngine ) {
+                return false;
+            }
 
             var captchaData = this.PullCaptchaData( challenge );
 
@@ -655,13 +704,21 @@ namespace UberScraper {
 
             bitmap.Save( document.FullPathWithFileName, ImageFormat.Png );
 
-            // solve (OCR) the captcha image
-            var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew();
+            using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
 
-            var page = this.TesseractEngine.Process( img );
-            answer = page.GetText();
+                using ( var page = tesseractEngine.Process( img ) ) {
 
-            return !String.IsNullOrWhiteSpace( answer );
+                    answer = page.GetText();
+
+                    document.Delete();
+
+                    var paragraph = new Paragraph( answer );
+
+                    answer = new Sentence( paragraph.ToStrings( " " ) ).ToStrings( " " );
+
+                    return !String.IsNullOrWhiteSpace( answer );
+                }
+            }
         }
 
         private void StartTheCaptchaStuff( CancellationToken cancellationToken ) {
@@ -683,6 +740,7 @@ namespace UberScraper {
             //method 1
             var captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
             var captchaInput = GetElementByID( this.WebBrowser1, "recaptcha_response_field" ); // find the captcha response textbox
+
 
             if ( null != captchaChallenge && null != captchaInput ) {
                 captchaData.Status = CaptchaStatus.ChallengeFound;
@@ -709,6 +767,17 @@ namespace UberScraper {
                     captchaData.Status = CaptchaStatus.SolvedChallenge;
                     this.UpdateCaptchaData( captchaData );
 
+                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "focus" );
+                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "scrollIntoView" );
+                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "click" );
+                    ByIDSetValue( this.WebBrowser1, captchaData.ResponseElementID, answer );
+
+                    this.Throttle( Seconds.Ten );
+
+                    ClickSubmit( this.WebBrowser1 );
+
+                    this.Throttle( Seconds.Ten );
+
                     return;
                 }
 
@@ -726,7 +795,7 @@ namespace UberScraper {
 
             //method 3 ....
             if ( false ) {
-                
+
                 return;
             }
             captchaData.Status = CaptchaStatus.NoChallengesFound;
@@ -826,9 +895,9 @@ namespace UberScraper {
                 }
                 try {
                     this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
-                    this.Throttle();
+                    //this.Throttle();
                     this.Navigate( link );
-                    this.Throttle();
+                    //this.Throttle();
                     try {
                         this.StartTheCaptchaStuff( cancellationToken );
                     }

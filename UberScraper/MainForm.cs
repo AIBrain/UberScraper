@@ -124,8 +124,9 @@
                 }
             }
             this.Dispose();
-            Console.Write( "Resources disposed." );
+            Console.WriteLine( "Resources disposed." );
 #if DEBUG
+            Console.WriteLine(  );
             Console.WriteLine( "Press any key to exit" );
             Console.ReadKey();
 #endif
