@@ -52,8 +52,8 @@
             this.webBrowser1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.webBrowser1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.webBrowser1.Location = new System.Drawing.Point(358, 58);
-            this.webBrowser1.Size = new System.Drawing.Size(1183, 471);
+            this.webBrowser1.Location = new System.Drawing.Point(612, 58);
+            this.webBrowser1.Size = new System.Drawing.Size(929, 471);
             this.webBrowser1.TabIndex = 0;
             this.webBrowser1.AddressChanged += new Awesomium.Core.UrlEventHandler(this.Awesomium_Windows_Forms_WebControl_AddressChanged);
             this.webBrowser1.DocumentReady += new Awesomium.Core.UrlEventHandler(this.Awesomium_Windows_Forms_WebControl_DocumentReady);
@@ -66,9 +66,9 @@
             this.labelBrowserSource.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelBrowserSource.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.labelBrowserSource.Location = new System.Drawing.Point(358, 9);
+            this.labelBrowserSource.Location = new System.Drawing.Point(612, 9);
             this.labelBrowserSource.Name = "labelBrowserSource";
-            this.labelBrowserSource.Size = new System.Drawing.Size(1183, 23);
+            this.labelBrowserSource.Size = new System.Drawing.Size(929, 23);
             this.labelBrowserSource.TabIndex = 1;
             this.labelBrowserSource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -76,9 +76,9 @@
             // 
             this.labelNavigationStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.labelNavigationStatus.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.labelNavigationStatus.Location = new System.Drawing.Point(358, 32);
+            this.labelNavigationStatus.Location = new System.Drawing.Point(612, 32);
             this.labelNavigationStatus.Name = "labelNavigationStatus";
-            this.labelNavigationStatus.Size = new System.Drawing.Size(1183, 23);
+            this.labelNavigationStatus.Size = new System.Drawing.Size(929, 23);
             this.labelNavigationStatus.TabIndex = 2;
             this.labelNavigationStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -86,21 +86,22 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Location = new System.Drawing.Point(12, 58);
+            this.tabControl1.Location = new System.Drawing.Point(164, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(340, 281);
+            this.tabControl1.Size = new System.Drawing.Size(146, 102);
             this.tabControl1.TabIndex = 3;
             // 
             // tabPage1
             // 
+            this.tabPage1.AutoScroll = true;
             this.tabPage1.Controls.Add(this.checkBoxAIBrainDotOrg);
             this.tabPage1.Controls.Add(this.checkBoxBitChestDotMe);
             this.tabPage1.Controls.Add(this.checkBoxVisitLandOfBitcoin);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(332, 255);
+            this.tabPage1.Size = new System.Drawing.Size(138, 76);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Visit";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -193,11 +194,12 @@
             this.pictureBoxChallenge.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBoxChallenge.Location = new System.Drawing.Point(12, 345);
+            this.pictureBoxChallenge.Location = new System.Drawing.Point(12, 120);
             this.pictureBoxChallenge.Name = "pictureBoxChallenge";
-            this.pictureBoxChallenge.Size = new System.Drawing.Size(340, 157);
+            this.pictureBoxChallenge.Size = new System.Drawing.Size(594, 382);
             this.pictureBoxChallenge.TabIndex = 4;
             this.pictureBoxChallenge.TabStop = false;
+            this.pictureBoxChallenge.WaitOnLoad = true;
             // 
             // textBox1
             // 

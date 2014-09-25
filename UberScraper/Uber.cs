@@ -34,6 +34,7 @@ namespace UberScraper {
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
+    using AForge.Imaging.Filters;
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
     using CsQuery;
@@ -117,7 +118,7 @@ namespace UberScraper {
             set;
         }
 
-        [CanBeNull]
+        [NotNull]
         public PictureBox PictureBoxChallenge {
             get;
             set;
@@ -682,31 +683,37 @@ namespace UberScraper {
 
             var captchaData = this.PullCaptchaData( challenge );
 
-            if ( captchaData.Image == null ) {
+            if ( captchaData.ImageUri == null ) {
                 captchaData.Status = CaptchaStatus.NoImageFoundToBeSolved;
                 this.UpdateCaptchaData( captchaData );
                 return false;
             }
 
-            if ( captchaData.ImageUri != null ) {
                 Console.WriteLine( "Attempting OCR on {0}", captchaData.ImageUri.AbsolutePath );
-            }
 
             captchaData.Status = CaptchaStatus.SolvingImage;
             this.UpdateCaptchaData( captchaData );
 
-            var bitmap = captchaData.Image;
-
             var folder = new Folder( Path.GetTempPath() );
 
             Document document;
-            folder.TryGetTempDocument( out document, "png" );
+            folder.TryGetTempDocument( document: out document, extension: "png" );
 
-            bitmap.Save( document.FullPathWithFileName, ImageFormat.Png );
+            this.PictureBoxChallenge.Image.Save( document.FullPathWithFileName, ImageFormat.Png );
+
+            var aforgeImage = AForge.Imaging.Image.FromFile( document.FullPathWithFileName );
+            ConservativeSmoothing smoothing = new ConservativeSmoothing();
+            CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
+            cannyEdgeDetector.Apply( aforgeImage );
+            aforgeImage.Save( document.FullPathWithFileName, ImageFormat.Png );
+            this.PictureBoxChallenge.ImageLocation = document.FullPathWithFileName;
+            this.PictureBoxChallenge.Load();
+
+            this.Throttle( Seconds.Twenty );
 
             using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
 
-                using ( var page = tesseractEngine.Process( img ) ) {
+                using ( var page = tesseractEngine.Process( img , PageSegMode.SingleLine) ) {
 
                     answer = page.GetText();
 
@@ -716,7 +723,13 @@ namespace UberScraper {
 
                     answer = new Sentence( paragraph.ToStrings( " " ) ).ToStrings( " " );
 
-                    return !String.IsNullOrWhiteSpace( answer );
+                    if ( !String.IsNullOrWhiteSpace( answer ) ) {
+                        captchaData.Status = CaptchaStatus.SolvedChallenge;
+                        this.UpdateCaptchaData( captchaData );
+                        return true;
+                    }
+
+                    return false;
                 }
             }
         }
@@ -741,7 +754,6 @@ namespace UberScraper {
             var captchaChallenge = GetElementByID( this.WebBrowser1, "recaptcha_challenge_image" );
             var captchaInput = GetElementByID( this.WebBrowser1, "recaptcha_response_field" ); // find the captcha response textbox
 
-
             if ( null != captchaChallenge && null != captchaInput ) {
                 captchaData.Status = CaptchaStatus.ChallengeFound;
 
@@ -751,30 +763,31 @@ namespace UberScraper {
 
                 captchaData.ImageUri = new Uri( captchaChallenge.src );
 
-                var pictureBoxChallenge = this.PictureBoxChallenge;
-                if ( pictureBoxChallenge != null ) {
-                    pictureBoxChallenge.Flash();
-                    pictureBoxChallenge.Load( captchaChallenge.src );
-                    pictureBoxChallenge.Flash();
-                    captchaData.Image = pictureBoxChallenge.Image.Clone() as Image;
-                    this.Throttle();
-                }
+                captchaData.Status = CaptchaStatus.LoadingImage;
+                this.UpdateCaptchaData( captchaData );
 
+                this.PictureBoxChallenge.Flash();
+                this.PictureBoxChallenge.Load( captchaChallenge.src );
+                this.PictureBoxChallenge.Flash();
+                //captchaData.Image = this.PictureBoxChallenge.Image.Clone() as Image;
+                captchaData.Status = CaptchaStatus.LoadedImage;
                 this.UpdateCaptchaData( captchaData );
 
                 String answer;
                 if ( this.SolveCaptcha( uri, cancellationToken, out answer ) ) {
-                    captchaData.Status = CaptchaStatus.SolvedChallenge;
-                    this.UpdateCaptchaData( captchaData );
+
 
                     ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "focus" );
                     ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "scrollIntoView" );
                     ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "click" );
                     ByIDSetValue( this.WebBrowser1, captchaData.ResponseElementID, answer );
 
-                    this.Throttle( Seconds.Ten );
+                    this.Throttle( Seconds.Five );
 
                     ClickSubmit( this.WebBrowser1 );
+
+                    this.PictureBoxChallenge.Image = null;
+                    this.PictureBoxChallenge.InitialImage = null;
 
                     this.Throttle( Seconds.Ten );
 
@@ -868,7 +881,7 @@ namespace UberScraper {
 
         private void Visit_AboutBlank() {
             this.Navigate( "about:blank" ); //.Wait( this.NavigationTimeout );
-            this.Throttle();
+            //this.Throttle();
         }
 
         private void Visit_BitChestDotMe( string bitcoinAddress, CancellationToken cancellationToken ) {
@@ -879,7 +892,7 @@ namespace UberScraper {
                 return;
             }
 
-            this.Throttle( Seconds.Three );
+            this.Throttle();
 
             if ( cancellationToken.IsCancellationRequested ) {
                 return;
@@ -887,7 +900,7 @@ namespace UberScraper {
 
             var links = GetAllLinks( this.WebBrowser1 ).Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
 
-            this.Throttle( Seconds.Three );
+            this.Throttle();
 
             foreach ( var link in links ) {
                 if ( cancellationToken.IsCancellationRequested ) {
@@ -895,7 +908,7 @@ namespace UberScraper {
                 }
                 try {
                     this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
-                    //this.Throttle();
+                    this.Throttle();
                     this.Navigate( link );
                     //this.Throttle();
                     try {
