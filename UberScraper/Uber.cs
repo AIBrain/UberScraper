@@ -28,7 +28,6 @@ namespace UberScraper {
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -49,6 +48,7 @@ namespace UberScraper {
     using Librainian.Measurement.Time;
     using Librainian.Persistence;
     using Librainian.Threading;
+    using Properties;
     using Tesseract;
     using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
@@ -450,9 +450,9 @@ namespace UberScraper {
 
                 foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                     try {
-                        Console.Write( String.Format( "Disposing of {0}...", disposable.Key.ToString() ) );
+                        Console.Write( String.Format( "Disposing of {0}...", disposable.Key ) );
                         disposable.Key.Dispose();
-                        Console.WriteLine( String.Format( "Disposed.", disposable.Key.ToString() ) );
+                        Console.WriteLine( String.Format( "Disposed of {0}.", disposable.Key ) );
                     }
                     catch ( Exception exception ) {
                         exception.Error();
@@ -689,7 +689,7 @@ namespace UberScraper {
                 return false;
             }
 
-                Console.WriteLine( "Attempting OCR on {0}", captchaData.ImageUri.AbsolutePath );
+                Console.WriteLine( Resources.Uber_SolveCaptcha_Attempting_OCR_on__0_, captchaData.ImageUri.AbsolutePath );
 
             captchaData.Status = CaptchaStatus.SolvingImage;
             this.UpdateCaptchaData( captchaData );
@@ -702,11 +702,17 @@ namespace UberScraper {
             this.PictureBoxChallenge.Image.Save( document.FullPathWithFileName, ImageFormat.Png );
 
             var aforgeImage = AForge.Imaging.Image.FromFile( document.FullPathWithFileName );
-            ConservativeSmoothing smoothing = new ConservativeSmoothing();
-            CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
+
+            var smoothing = new ConservativeSmoothing();
+
+            var cannyEdgeDetector = new CannyEdgeDetector();
+
             cannyEdgeDetector.Apply( aforgeImage );
+
             aforgeImage.Save( document.FullPathWithFileName, ImageFormat.Png );
+
             this.PictureBoxChallenge.ImageLocation = document.FullPathWithFileName;
+
             this.PictureBoxChallenge.Load();
 
             this.Throttle( Seconds.Twenty );
