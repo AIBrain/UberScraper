@@ -715,7 +715,7 @@ namespace UberScraper {
 
             this.PictureBoxChallenge.Load();
 
-            this.Throttle( Seconds.Twenty );
+            this.Throttle( Seconds.Ten );
 
             using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
 
@@ -723,11 +723,11 @@ namespace UberScraper {
 
                     answer = page.GetText();
 
-                    document.Delete();
-
                     var paragraph = new Paragraph( answer );
 
                     answer = new Sentence( paragraph.ToStrings( " " ) ).ToStrings( " " );
+
+                    FluentTimers.Create( Minutes.One, () => document.Delete() ).AndStart();
 
                     if ( !String.IsNullOrWhiteSpace( answer ) ) {
                         captchaData.Status = CaptchaStatus.SolvedChallenge;
@@ -737,6 +737,7 @@ namespace UberScraper {
 
                     return false;
                 }
+                
             }
         }
 
