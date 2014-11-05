@@ -1,25 +1,21 @@
-﻿#region License & Information
-
-// This notice must be kept visible in the source.
+﻿// This notice must be kept visible in the source.
 //
-// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified,
-// or the original license has been overwritten by the automatic formatting of this code.
-// Any unmodified sections of source code borrowed from other projects retain their original license and thanks goes to the Authors.
+// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified, or the
+// original license has been overwritten by the automatic formatting of this code. Any unmodified
+// sections of source code borrowed from other projects retain their original license and thanks
+// goes to the Authors.
 //
 // Donations and Royalties can be paid via
 // PayPal: paypal@aibrain.org
-// bitcoin:1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
-// bitcoin:1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
-// litecoin:LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
+// bitcoin: 1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
+// bitcoin: 1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
+// litecoin: LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
 //
-// Usage of the source code or compiled binaries is AS-IS.
-// I am not responsible for Anything You Do.
+// Usage of the source code or compiled binaries is AS-IS. I am not responsible for Anything You Do.
 //
 // Contact me by email if you have any questions or helpful criticism.
 //
 // "UberScraper/Uber.cs" was last cleaned by Rick on 2014/09/22 at 11:04 AM
-
-#endregion License & Information
 
 namespace UberScraper {
 
@@ -111,7 +107,7 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     <para>Defaults to <see cref="Seconds.Thirty" /> in the ctor.</para>
+        /// <para>Defaults to <see cref="Seconds.Thirty" /> in the ctor.</para>
         /// </summary>
         public TimeSpan NavigationTimeout {
             get;
@@ -158,6 +154,45 @@ namespace UberScraper {
             }
         }
 
+        public static Boolean ByIDFunction( WebControl webBrowser, String id, String function ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).{1}();", id, function ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
+        public static Boolean ByIDSetValue( WebControl webBrowser, String id, String text ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).value=\"{1}\";", id, text ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
+        public static Boolean ClickSubmit( WebControl webBrowser, int index = 0 ) {
+            try {
+                if ( webBrowser != null ) {
+                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.querySelectorAll(\"button[type='submit']\")[{0}].click();", index ) ) ) );
+                    return true;
+                }
+            }
+            catch ( Exception exception ) {
+                exception.Error();
+            }
+            return false;
+        }
+
         public static IEnumerable<Uri> GetAllLinks( WebControl webBrowser ) {
             var html = GetBrowserHTML( webBrowser );
 
@@ -193,7 +228,7 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     Retrieve the <see cref="Uri" /> the <see cref="WebBrowser1" /> is currently at.
+        /// Retrieve the <see cref="Uri" /> the <see cref="WebBrowser1" /> is currently at.
         /// </summary>
         /// <param name="webBrowser"></param>
         /// <returns></returns>
@@ -253,45 +288,6 @@ namespace UberScraper {
                 exception.Error();
             }
             return null;
-        }
-
-        public static Boolean ByIDSetValue( WebControl webBrowser, String id, String text ) {
-            try {
-                if ( webBrowser != null ) {
-                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).value=\"{1}\";", id, text ) ) ) );
-                    return true;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return false;
-        }
-
-        public static Boolean ByIDFunction( WebControl webBrowser, String id, String function ) {
-            try {
-                if ( webBrowser != null ) {
-                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).{1}();", id, function ) ) ) );
-                    return true;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return false;
-        }
-
-        public static Boolean ClickSubmit( WebControl webBrowser, Byte index = 0 ) {
-            try {
-                if ( webBrowser != null ) {
-                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.querySelectorAll(\"button[type='submit']\")[{0}].click();", index ) ) ) );
-                    return true;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return false;
         }
 
         [CanBeNull]
@@ -442,7 +438,8 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting
+        /// unmanaged resources.
         /// </summary>
         public void Dispose() {
             try {
@@ -478,7 +475,7 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     <para>Load tables.</para>
+        /// <para>Load tables.</para>
         /// </summary>
         /// <returns></returns>
         public async Task<Boolean> Init() {
@@ -598,7 +595,7 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
+        /// <para>Gets and sets a <see cref="Captcha" /> .</para>
         /// </summary>
         /// <param name="uri"></param>
         [NotNull]
@@ -629,12 +626,11 @@ namespace UberScraper {
             if ( webBrowser != null ) {
                 Console.WriteLine( "Requesting browser stops..." );
                 webBrowser.Invoke( new Action( webBrowser.Stop ) );
-
             }
         }
 
         /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha" />.</para>
+        /// <para>Gets and sets a <see cref="Captcha" /> .</para>
         /// </summary>
         /// <param name="uri"></param>
         /// <param name="captcha"></param>
@@ -689,7 +685,7 @@ namespace UberScraper {
                 return false;
             }
 
-                Console.WriteLine( Resources.Uber_SolveCaptcha_Attempting_OCR_on__0_, captchaData.ImageUri.AbsolutePath );
+            Console.WriteLine( Resources.Uber_SolveCaptcha_Attempting_OCR_on__0_, captchaData.ImageUri.AbsolutePath );
 
             captchaData.Status = CaptchaStatus.SolvingImage;
             this.UpdateCaptchaData( captchaData );
@@ -719,7 +715,7 @@ namespace UberScraper {
 
             using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
 
-                using ( var page = tesseractEngine.Process( img , PageSegMode.SingleLine) ) {
+                using ( var page = tesseractEngine.Process( img, PageSegMode.SingleLine ) ) {
 
                     answer = page.GetText();
 
@@ -737,7 +733,6 @@ namespace UberScraper {
 
                     return false;
                 }
-                
             }
         }
 
@@ -776,13 +771,13 @@ namespace UberScraper {
                 this.PictureBoxChallenge.Flash();
                 this.PictureBoxChallenge.Load( captchaChallenge.src );
                 this.PictureBoxChallenge.Flash();
+
                 //captchaData.Image = this.PictureBoxChallenge.Image.Clone() as Image;
                 captchaData.Status = CaptchaStatus.LoadedImage;
                 this.UpdateCaptchaData( captchaData );
 
                 String answer;
                 if ( this.SolveCaptcha( uri, cancellationToken, out answer ) ) {
-
 
                     ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "focus" );
                     ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "scrollIntoView" );
@@ -888,6 +883,7 @@ namespace UberScraper {
 
         private void Visit_AboutBlank() {
             this.Navigate( "about:blank" ); //.Wait( this.NavigationTimeout );
+
             //this.Throttle();
         }
 
@@ -917,6 +913,7 @@ namespace UberScraper {
                     this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
                     this.Throttle();
                     this.Navigate( link );
+
                     //this.Throttle();
                     try {
                         this.StartTheCaptchaStuff( cancellationToken );
