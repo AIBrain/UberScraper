@@ -21,7 +21,6 @@ namespace UberScraper {
 
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
     using System.IO;
@@ -191,78 +190,6 @@ namespace UberScraper {
                 exception.Error();
             }
             return false;
-        }
-
-        public static IEnumerable<Uri> GetAllLinks( WebControl webBrowser ) {
-            var html = GetBrowserHTML( webBrowser );
-
-            var cq = new CQ( html, HtmlParsingMode.Auto, HtmlParsingOptions.AllowSelfClosingTags, DocType.HTML5 );
-
-            var anchors = cq[ "a" ].ToList();
-
-            foreach ( var href in anchors.Select( domObject => domObject[ "href" ] ) ) {
-                Uri uri;
-                if ( !Uri.TryCreate( href, UriKind.Absolute, out uri ) ) {
-                    continue;
-                }
-                yield return uri;
-            }
-        }
-
-        [CanBeNull]
-        public static String GetBrowserHTML( WebControl webBrowser ) {
-            try {
-                if ( webBrowser != null ) {
-                    var result = webBrowser.Invoke( new Func<string>( () => webBrowser.ExecuteJavascriptWithResult( "document.getElementsByTagName('html')[0].innerHTML" ) ) );
-
-                    if ( result is String ) {
-                        return result as String;
-                    }
-                    return result.ToString();
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Retrieve the <see cref="Uri" /> the <see cref="WebBrowser1" /> is currently at.
-        /// </summary>
-        /// <param name="webBrowser"></param>
-        /// <returns></returns>
-        [NotNull]
-        public static Uri GetBrowserLocation( WebControl webBrowser ) {
-            try {
-                var browser = webBrowser;
-                if ( browser != null ) {
-                    var result = browser.Invoke( new Func<Uri>( () => browser.Source ) );
-                    return ( Uri )result;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return new Uri( "about:blank" );
-        }
-
-        [CanBeNull]
-        public static String GetBrowserText( WebControl webBrowser ) {
-            try {
-                if ( webBrowser != null ) {
-                    var result = webBrowser.Invoke( new Func<string>( () => webBrowser.ExecuteJavascriptWithResult( "document.getElementsByTagName('html')[0].innerText" ) ) );
-
-                    if ( result is String ) {
-                        return result as String;
-                    }
-                    return result.ToString();
-                }
-            }
-            catch ( Exception exception ) {
-                exception.Error();
-            }
-            return null;
         }
 
         [CanBeNull]
@@ -737,10 +664,10 @@ namespace UberScraper {
         }
 
         private void StartTheCaptchaStuff( CancellationToken cancellationToken ) {
-            var uri = GetBrowserLocation( this.WebBrowser1 );
+            var uri = this.WebBrowser1.GetBrowserLocation();
 
             // Check if the page shows any sort of countdown/NotReadyYet
-            var text = GetBrowserText( this.WebBrowser1 ) ?? String.Empty;
+            var text = this.WebBrowser1.GetInnerText() ?? String.Empty;
             if ( text.Contains( "You must wait" ) ) {
                 return;
             }
@@ -819,7 +746,7 @@ namespace UberScraper {
 
         private void Throttle( TimeSpan? until = null ) {
 
-            //TODO look into that semaphore wategate thing...
+            //TODO look into that semaphore waitgate thing...
             if ( !until.HasValue ) {
                 until = Seconds.One;
             }
@@ -889,9 +816,8 @@ namespace UberScraper {
 
         private void Visit_BitChestDotMe( string bitcoinAddress, CancellationToken cancellationToken ) {
             Report.Enter();
-            if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {
 
-                //.Wait( this.NavigationTimeout ) )
+            if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {
                 return;
             }
 
@@ -901,7 +827,7 @@ namespace UberScraper {
                 return;
             }
 
-            var links = GetAllLinks( this.WebBrowser1 ).Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
+            var links = this.WebBrowser1.GetAllLinks().Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
 
             this.Throttle();
 
@@ -942,7 +868,7 @@ namespace UberScraper {
                 return;
             }
 
-            var bob = new CQ( GetBrowserHTML( this.WebBrowser1 ) );
+            var bob = new CQ( this.WebBrowser1.GetBrowserHTML() );
             var text = bob[ "username" ].Text();
             bob[ "username" ].Text( "AIBrain" );
 

@@ -5,7 +5,6 @@
     using System.Windows.Forms;
     using Librainian;
     using Librainian.Extensions;
-    using Librainian.Magic;
 
     internal static class Program {
 
@@ -25,10 +24,8 @@
                     Console.WriteLine( "Loading MainForm." );
                 }
 
-                using ( var mainForm = Ioc.Container.TryGet< MainForm >() ) {
-                    if ( mainForm != null ) {
-                        Application.Run( mainForm );
-                    }
+                using ( var mainForm = new MainForm() ) {
+                    Application.Run( mainForm );
                 }
             }
             catch ( Exception exception ) {
@@ -41,7 +38,7 @@
             }
 
 
-            
+
         }
     }
 }

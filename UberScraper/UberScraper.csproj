@@ -152,6 +152,7 @@
       <HintPath>..\packages\Nito.AsyncEx.3.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="SkyScraper">
       <HintPath>..\packages\SkyScraper.1.0.45\lib\net45\SkyScraper.dll</HintPath>
     </Reference>

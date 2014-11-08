@@ -152,7 +152,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(332, 255);
+            this.tabPage2.Size = new System.Drawing.Size(138, 76);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Options";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -253,6 +253,7 @@
             this.Controls.Add(this.labelBrowserSource);
             this.Controls.Add(this.webBrowser1);
             this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::UberScraper.Properties.Settings.Default, "MainFormLocation", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.DoubleBuffered = true;
             this.Location = global::UberScraper.Properties.Settings.Default.MainFormLocation;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

@@ -8,7 +8,6 @@
     using FluentAssertions;
     using Librainian.Annotations;
     using Librainian.Controls;
-    using Librainian.Magic;
     using Properties;
 
     public partial class MainForm : Form {
@@ -25,7 +24,7 @@
         }
 
         [NotNull]
-        protected CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        protected readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 
         [CanBeNull]
         public Uber Uber {
@@ -38,7 +37,7 @@
         }
 
         private void Awesomium_Windows_Forms_WebControl_Crashed( object sender, CrashedEventArgs e ) {
-            this.labelNavigationStatus.Text( "Crashed" );
+            this.labelNavigationStatus.Text( "Browser crashed" );
         }
 
         private void Awesomium_Windows_Forms_WebControl_DocumentReady( object sender, UrlEventArgs e ) {
@@ -66,7 +65,7 @@
 
         private void MainForm_Load( object sender, EventArgs e ) {
             Console.Write( "Loading settings..." );
-            this.Uber = Ioc.Container.TryGet<Uber>();
+            this.Uber = new Uber();
             var uber = this.Uber;
             if ( uber == null ) {
                 return;
@@ -88,7 +87,7 @@
             }
         }
 
-        private void buttonStart_Click( object sender, EventArgs e ) {
+        private async void buttonStart_Click( object sender, EventArgs e ) {
             Console.WriteLine( "Website visit start requested..." );
             try {
                 this.buttonStart.Usable( false );
@@ -97,10 +96,10 @@
                 if ( null == uber ) {
                     return;
                 }
-                //await Task.Run( () => 
-                uber.PictureBoxChallenge = this.pictureBoxChallenge;
-                uber.VisitSites( CancellationTokenSource.Token );
-                //);
+                await Task.Run( () => {
+                    uber.PictureBoxChallenge = this.pictureBoxChallenge;
+                    uber.VisitSites( CancellationTokenSource.Token );
+                } );
             }
             finally {
                 this.buttonStop.Usable( false );
@@ -126,7 +125,7 @@
             this.Dispose();
             Console.WriteLine( "Resources disposed." );
 #if DEBUG
-            Console.WriteLine(  );
+            Console.WriteLine();
             Console.WriteLine( "Press any key to exit" );
             Console.ReadKey();
 #endif
