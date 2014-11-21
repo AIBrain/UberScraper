@@ -47,7 +47,7 @@ namespace UberScraper {
     using Tesseract;
     using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
-    public class Uber : IUber {
+    public class Uber : IDisposable {
 
         [CanBeNull]
         public TesseractEngine TesseractEngine;
@@ -374,9 +374,9 @@ namespace UberScraper {
 
                 foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                     try {
-                        Console.Write( String.Format( "Disposing of {0}...", disposable.Key ) );
+                        Console.Write( "Disposing of {0}...", disposable.Key );
                         disposable.Key.Dispose();
-                        Console.WriteLine( String.Format( "Disposed of {0}.", disposable.Key ) );
+                        Console.WriteLine( "Disposed of {0}.", disposable.Key );
                     }
                     catch ( Exception exception ) {
                         exception.Error();
