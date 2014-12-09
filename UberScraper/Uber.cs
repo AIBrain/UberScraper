@@ -730,16 +730,20 @@ namespace UberScraper {
             //TODO look for other captcha types (methods to find and solve them)
 
             //method 2 ....
-            if ( false ) {
+            /*
+                        if ( false ) {
 
-                return;
-            }
+                            return;
+                        }
+            */
 
             //method 3 ....
-            if ( false ) {
+            /*
+                        if ( false ) {
 
-                return;
-            }
+                            return;
+                        }
+            */
             captchaData.Status = CaptchaStatus.NoChallengesFound;
             this.UpdateCaptchaData( captchaData );
         }
@@ -787,12 +791,12 @@ namespace UberScraper {
                 }
 
                 switch ( faucetID ) {
-                    case BitcoinFaucets.BitChestDotMe:
-                        this.Visit_BitChestDotMe( "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationToken );
-                        break;
+                    //case BitcoinFaucets.BitChestDotMe:
+                    //    this.Visit_BitChestDotMe( "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationToken );
+                    //    break;
 
                     case BitcoinFaucets.LandOfBitCoinDotCom:
-                        this.Visit_LandOfBitCoinDotCom();
+                        this.Visit_LandOfBitCoinDotCom( "1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE", cancellationToken );
                         break;
 
                     default:
@@ -814,7 +818,7 @@ namespace UberScraper {
             //this.Throttle();
         }
 
-        private void Visit_BitChestDotMe( string bitcoinAddress, CancellationToken cancellationToken ) {
+        private void Visit_BitChestDotMe( String bitcoinAddress, CancellationToken cancellationToken ) {
             Report.Enter();
 
             if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {
@@ -861,22 +865,47 @@ namespace UberScraper {
             Report.Exit();
         }
 
-        private void Visit_LandOfBitCoinDotCom() {
-            if ( !this.Navigate( "https://www.landofbitcoin.com/login" ) ) {
-
-                //.Wait( this.NavigationTimeout )
+        private void Visit_LandOfBitCoinDotCom( String bitcoinAddress, CancellationToken cancellationToken ) {
+            if ( !this.Navigate( "http://www.landofbitcoin.com/free-bitcoin-faucets" ) ) {
                 return;
             }
 
-            var bob = new CQ( this.WebBrowser1.GetBrowserHTML() );
-            var text = bob[ "username" ].Text();
-            bob[ "username" ].Text( "AIBrain" );
-
-            //while ( !this.CancellationTokenSource.IsCancellationRequested ) {
             this.Throttle();
 
-            //}
-            //go to main page
+            if ( cancellationToken.IsCancellationRequested ) {
+                return;
+            }
+
+            var links = this.WebBrowser1.GetAllLinks().Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
+
+            this.Throttle();
+
+            foreach ( var link in links ) {
+                if ( cancellationToken.IsCancellationRequested ) {
+                    return;
+                }
+                try {
+                    this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
+                    this.Throttle();
+                    this.Navigate( link );
+
+                    //this.Throttle();
+                    try {
+                        this.StartTheCaptchaStuff( cancellationToken );
+                    }
+                    catch ( Exception exception ) {
+                        exception.Error();
+                    }
+                }
+                catch ( Exception exception ) {
+                    exception.Error();
+                }
+                finally {
+                    this.Throttle();
+                }
+
+                //TODO submit
+            }
         }
     }
 }
