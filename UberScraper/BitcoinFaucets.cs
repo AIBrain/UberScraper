@@ -33,8 +33,8 @@ namespace UberScraper {
         [Description( "http://AIBrain.Org/bitcoin/?a=1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE" )]
         AIBrainDotOrg,
 
-        [Description( "http://www.bitchest.me/" )]
-        BitChestDotMe,
+        //[Description( "http://www.bitchest.me/" )]
+        //BitChestDotMe,    //dead faucet
 
         [Description( "https://www.landofbitcoin.com/" )]
         LandOfBitCoinDotCom,
