@@ -18,7 +18,6 @@
 // "UberScraper/Uber.cs" was last cleaned by Rick on 2014/09/22 at 11:04 AM
 
 namespace UberScraper {
-
     using System;
     using System.Collections.Concurrent;
     using System.ComponentModel;
@@ -28,12 +27,11 @@ namespace UberScraper {
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
+    using AForge.Imaging;
     using AForge.Imaging.Filters;
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
-    using CsQuery;
     using FluentAssertions;
-    using Librainian;
     using Librainian.Annotations;
     using Librainian.Collections;
     using Librainian.Controls;
@@ -161,7 +159,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return false;
         }
@@ -174,7 +172,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return false;
         }
@@ -187,7 +185,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return false;
         }
@@ -203,7 +201,7 @@ namespace UberScraper {
                                 return document.getElementById( id );
                             }
                             catch ( Exception exception ) {
-                                exception.Error();
+                                exception.More();
                             }
                             return null;
                         }
@@ -212,7 +210,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return null;
         }
@@ -228,7 +226,7 @@ namespace UberScraper {
                                 return document.getElementsByTagName( type );
                             }
                             catch ( Exception exception ) {
-                                exception.Error();
+                                exception.More();
                             }
                             return null;
                         }
@@ -237,7 +235,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return null;
         }
@@ -258,7 +256,7 @@ namespace UberScraper {
                 return true;
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return false;
         }
@@ -275,14 +273,14 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             return null;
         }
 
         public Boolean ConnectDatabase_Captchas() {
             try {
-                Report.Enter();
+                Log.Enter();
 
                 this._captchaDatabase = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
 
@@ -303,7 +301,7 @@ namespace UberScraper {
                 return false;
             }
             finally {
-                Report.Exit();
+                Log.Exit();
             }
 
             return null != this._captchaDatabase;
@@ -311,7 +309,7 @@ namespace UberScraper {
 
         public Boolean ConnectDatabase_PastAnswers() {
             try {
-                Report.Enter();
+                Log.Enter();
 
                 this._pastAnswers = new PersistTable<String, String>( Environment.SpecialFolder.CommonApplicationData, "PastAnswers" );
 
@@ -329,7 +327,7 @@ namespace UberScraper {
             catch ( FileNotFoundException ) {
             }
             finally {
-                Report.Exit();
+                Log.Exit();
             }
 
             return false;
@@ -337,7 +335,7 @@ namespace UberScraper {
 
         public Boolean ConnectDatabase_Websites() {
             try {
-                Report.Enter();
+                Log.Enter();
 
                 this._webSites = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
 
@@ -358,7 +356,7 @@ namespace UberScraper {
                 return false;
             }
             finally {
-                Report.Exit();
+                Log.Exit();
             }
 
             return null != this._webSites;
@@ -370,7 +368,7 @@ namespace UberScraper {
         /// </summary>
         public void Dispose() {
             try {
-                Report.Enter();
+                Log.Enter();
 
                 foreach ( var disposable in this._autoDisposables.Where( pair => null != pair.Key ).OrderByDescending( pair => pair.Value ) ) {
                     try {
@@ -379,12 +377,12 @@ namespace UberScraper {
                         Console.WriteLine( "Disposed of {0}.", disposable.Key );
                     }
                     catch ( Exception exception ) {
-                        exception.Error();
+                        exception.More();
                     }
                 }
             }
             finally {
-                Report.Exit();
+                Log.Exit();
             }
         }
 
@@ -417,7 +415,7 @@ namespace UberScraper {
                         return null != this.TesseractEngine;
                     }
                     catch ( TesseractException exception ) {
-                        exception.Error();
+                        exception.More();
                         return false;
                     }
                 }, this.CancellationTokenSource.Token );
@@ -490,7 +488,7 @@ namespace UberScraper {
                     return false;
                 }
                 webBrowser.Invoke( method: new Action( () => {
-                    Report.Before( String.Format( "Navigating to {0}...", uri ) );
+                    Log.Before( String.Format( "Navigating to {0}...", uri ) );
 
                     this.EnsureWebsite( uri );
 
@@ -506,11 +504,11 @@ namespace UberScraper {
                         if ( watchdog.Elapsed < this.NavigationTimeout ) {
                             continue;
                         }
-                        Report.Before( "*navigation^timed->out*" );
+                        Log.Before( "*navigation^timed->out*" );
                         break;
                     }
 
-                    Report.After( "done navigating." );
+                    Log.After( "done navigating." );
                 } ) );
 
                 return webBrowser.IsDocumentReady && webBrowser.IsResponsive;
@@ -624,7 +622,7 @@ namespace UberScraper {
 
             this.PictureBoxChallenge.Image.Save( document.FullPathWithFileName, ImageFormat.Png );
 
-            var aforgeImage = AForge.Imaging.Image.FromFile( document.FullPathWithFileName );
+            var aforgeImage = Image.FromFile( document.FullPathWithFileName );
 
             var smoothing = new ConservativeSmoothing();
 
@@ -805,7 +803,7 @@ namespace UberScraper {
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             finally {
                 this.Throttle();
@@ -819,7 +817,7 @@ namespace UberScraper {
         }
 
         private void Visit_BitChestDotMe( String bitcoinAddress, CancellationToken cancellationToken ) {
-            Report.Enter();
+            Log.Enter();
 
             if ( !this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ) ) {
                 return;
@@ -849,11 +847,11 @@ namespace UberScraper {
                         this.StartTheCaptchaStuff( cancellationToken );
                     }
                     catch ( Exception exception ) {
-                        exception.Error();
+                        exception.More();
                     }
                 }
                 catch ( Exception exception ) {
-                    exception.Error();
+                    exception.More();
                 }
                 finally {
                     this.Throttle();
@@ -862,7 +860,7 @@ namespace UberScraper {
                 //TODO submit
             }
 
-            Report.Exit();
+            Log.Exit();
         }
 
         private void Visit_LandOfBitCoinDotCom( String bitcoinAddress, CancellationToken cancellationToken ) {
@@ -894,11 +892,11 @@ namespace UberScraper {
                         this.StartTheCaptchaStuff( cancellationToken );
                     }
                     catch ( Exception exception ) {
-                        exception.Error();
+                        exception.More();
                     }
                 }
                 catch ( Exception exception ) {
-                    exception.Error();
+                    exception.More();
                 }
                 finally {
                     this.Throttle();
