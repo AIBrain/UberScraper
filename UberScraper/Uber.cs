@@ -50,6 +50,7 @@ namespace UberScraper {
         [CanBeNull]
         public TesseractEngine TesseractEngine;
 
+        [NotNull]
         private readonly ConcurrentDictionary<IDisposable, DateTime> _autoDisposables = new ConcurrentDictionary<IDisposable, DateTime>();
 
         [NotNull]
@@ -196,7 +197,7 @@ namespace UberScraper {
                 if ( webBrowser != null ) {
                     var answer = webBrowser.Invoke( new Func<JSObject>( () => {
                         dynamic document = ( JSObject )webBrowser.ExecuteJavascriptWithResult( "document" );
-                        using ( document ) {
+                        using (document) {
                             try {
                                 return document.getElementById( id );
                             }
@@ -221,7 +222,7 @@ namespace UberScraper {
                 if ( webBrowser != null ) {
                     var answer = webBrowser.Invoke( new Func<JSObject>( () => {
                         dynamic document = ( JSObject )webBrowser.ExecuteJavascriptWithResult( "document" );
-                        using ( document ) {
+                        using (document) {
                             try {
                                 return document.getElementsByTagName( type );
                             }
@@ -247,7 +248,7 @@ namespace UberScraper {
         /// <param name="result"></param>
         /// <returns></returns>
         public static Boolean GetJavascriptWithResult( WebControl webBrowser, String javascript, out JSValue result ) {
-            result = default( JSValue );
+            result = default(JSValue);
             if ( webBrowser == null ) {
                 return false;
             }
@@ -288,16 +289,16 @@ namespace UberScraper {
                     this._autoDisposables.TryAdd( this._captchaDatabase, DateTime.Now );
                 }
             }
-            catch ( InvalidOperationException ) {
+            catch ( InvalidOperationException) {
                 return false;
             }
-            catch ( PathTooLongException ) {
+            catch ( PathTooLongException) {
                 return false;
             }
-            catch ( DirectoryNotFoundException ) {
+            catch ( DirectoryNotFoundException) {
                 return false;
             }
-            catch ( FileNotFoundException ) {
+            catch ( FileNotFoundException) {
                 return false;
             }
             finally {
@@ -318,13 +319,13 @@ namespace UberScraper {
                     return true;
                 }
             }
-            catch ( InvalidOperationException ) {
+            catch ( InvalidOperationException) {
             }
-            catch ( PathTooLongException ) {
+            catch ( PathTooLongException) {
             }
-            catch ( DirectoryNotFoundException ) {
+            catch ( DirectoryNotFoundException) {
             }
-            catch ( FileNotFoundException ) {
+            catch ( FileNotFoundException) {
             }
             finally {
                 Log.Exit();
@@ -343,16 +344,16 @@ namespace UberScraper {
                     this._autoDisposables.TryAdd( this._webSites, DateTime.Now );
                 }
             }
-            catch ( InvalidOperationException ) {
+            catch ( InvalidOperationException) {
                 return false;
             }
-            catch ( PathTooLongException ) {
+            catch ( PathTooLongException) {
                 return false;
             }
-            catch ( DirectoryNotFoundException ) {
+            catch ( DirectoryNotFoundException) {
                 return false;
             }
-            catch ( FileNotFoundException ) {
+            catch ( FileNotFoundException) {
                 return false;
             }
             finally {
@@ -530,7 +531,8 @@ namespace UberScraper {
             }
 
             if ( null == this._captchaDatabase[ uri.AbsoluteUri ] ) {
-                var captcha = new Captcha {
+                var captcha = new Captcha
+                {
                     Uri = uri
                 };
                 this._captchaDatabase[ uri.AbsoluteUri ] = captcha;
@@ -567,7 +569,7 @@ namespace UberScraper {
         }
 
         public void VisitSites( CancellationToken cancellationToken ) {
-            var faucets = ( BitcoinFaucets[] )Enum.GetValues( typeof( BitcoinFaucets ) );
+            var faucets = ( BitcoinFaucets[] )Enum.GetValues( typeof(BitcoinFaucets) );
 
             Console.WriteLine( "Visiting websites..." );
             foreach ( var faucetID in faucets.OrderBy( bitcoinFaucets => ( int )bitcoinFaucets ) ) {
@@ -581,7 +583,7 @@ namespace UberScraper {
         [NotNull]
         private static string GetDescription( BitcoinFaucets faucet ) {
             var fi = faucet.GetType().GetField( faucet.ToString() );
-            var attributes = ( DescriptionAttribute[] )fi.GetCustomAttributes( typeof( DescriptionAttribute ), false );
+            var attributes = ( DescriptionAttribute[] )fi.GetCustomAttributes( typeof(DescriptionAttribute), false );
             return attributes.Length > 0 ? attributes[ 0 ].Description : String.Empty;
         }
 
@@ -638,9 +640,9 @@ namespace UberScraper {
 
             this.Throttle( Seconds.Ten );
 
-            using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
+            using (var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew()) {
 
-                using ( var page = tesseractEngine.Process( img, PageSegMode.SingleLine ) ) {
+                using (var page = tesseractEngine.Process( img, PageSegMode.SingleLine )) {
 
                     answer = page.GetText();
 
