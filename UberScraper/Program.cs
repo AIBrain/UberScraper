@@ -1,10 +1,7 @@
 ﻿namespace UberScraper {
-
     using System;
-    using System.Reflection;
     using System.Windows.Forms;
-    using Librainian;
-    using Librainian.Extensions;
+    using Librainian.Threading;
 
     internal static class Program {
 
@@ -14,31 +11,21 @@
         [STAThread]
         private static void Main() {
             try {
+                Log.Startup();
+
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault( false );
-
-                Diagnostical.HasConsoleBeenAllocated = NativeWin32.AllocConsole();
-                if ( Diagnostical.HasConsoleBeenAllocated ) {
-                    Console.WriteLine( "Logging console activated." );
-                    Console.WriteLine( "Assembly version {0}", Assembly.GetEntryAssembly().GetName().Version );
-                    Console.WriteLine( "Loading MainForm." );
-                }
 
                 using ( var mainForm = new MainForm() ) {
                     Application.Run( mainForm );
                 }
             }
             catch ( Exception exception ) {
-                exception.Error();
+                exception.More();
             }
             finally {
-                if ( Diagnostical.HasConsoleBeenAllocated ) {
-                    Diagnostical.HasConsoleBeenAllocated = !NativeWin32.FreeConsole();
-                }
+                Log.Shutdown();
             }
-
-
-
         }
     }
 }
