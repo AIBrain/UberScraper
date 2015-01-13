@@ -32,6 +32,7 @@ namespace UberScraper {
     using Awesomium.Core;
     using Awesomium.Windows.Forms;
     using FluentAssertions;
+    using JetBrains.Annotations;
     using Librainian.Annotations;
     using Librainian.Collections;
     using Librainian.Controls;
@@ -135,7 +136,8 @@ namespace UberScraper {
             }
         }
 
-        [CanBeNull]
+        
+        [ CanBeNull ]
         public WebControl WebBrowser2 {
             get {
                 return this._webBrowser2;
@@ -152,31 +154,7 @@ namespace UberScraper {
             }
         }
 
-        public static Boolean ByIDFunction( WebControl webBrowser, String id, String function ) {
-            try {
-                if ( webBrowser != null ) {
-                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).{1}();", id, function ) ) ) );
-                    return true;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.More();
-            }
-            return false;
-        }
-
-        public static Boolean ByIDSetValue( WebControl webBrowser, String id, String text ) {
-            try {
-                if ( webBrowser != null ) {
-                    webBrowser.Invoke( new Action( () => webBrowser.ExecuteJavascript( String.Format( "document.getElementById( {0} ).value=\"{1}\";", id, text ) ) ) );
-                    return true;
-                }
-            }
-            catch ( Exception exception ) {
-                exception.More();
-            }
-            return false;
-        }
+       
 
         public static Boolean ClickSubmit( WebControl webBrowser, int index = 0 ) {
             try {
