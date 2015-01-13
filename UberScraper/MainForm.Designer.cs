@@ -1,9 +1,13 @@
 ﻿namespace UberScraper {
+    using System.ComponentModel;
+    using System.Windows.Forms;
+    using Awesomium.Windows.Forms;
+
     partial class MainForm {
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -89,7 +93,7 @@
             this.tabControl1.Location = new System.Drawing.Point(164, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(146, 102);
+            this.tabControl1.Size = new System.Drawing.Size(188, 102);
             this.tabControl1.TabIndex = 3;
             // 
             // tabPage1
@@ -101,7 +105,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(138, 76);
+            this.tabPage1.Size = new System.Drawing.Size(180, 76);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Visit";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -152,7 +156,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(138, 76);
+            this.tabPage2.Size = new System.Drawing.Size(180, 76);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Options";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -276,22 +280,22 @@
 
         #endregion
 
-        private Awesomium.Windows.Forms.WebControl webBrowser1;
-        private System.Windows.Forms.Label labelBrowserSource;
-        private System.Windows.Forms.Label labelNavigationStatus;
-        private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.CheckBox checkBoxVisitLandOfBitcoin;
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.NumericUpDown numericThrottle;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.CheckBox checkBoxAIBrainDotOrg;
-        private System.Windows.Forms.CheckBox checkBoxBitChestDotMe;
-        private System.Windows.Forms.PictureBox pictureBoxChallenge;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button buttonSolveChallenge;
-        private System.Windows.Forms.Button buttonStart;
-        private System.Windows.Forms.Button buttonStop;
+        private WebControl webBrowser1;
+        private Label labelBrowserSource;
+        private Label labelNavigationStatus;
+        private TabControl tabControl1;
+        private TabPage tabPage1;
+        private CheckBox checkBoxVisitLandOfBitcoin;
+        private TabPage tabPage2;
+        private NumericUpDown numericThrottle;
+        private Label label1;
+        private CheckBox checkBoxAIBrainDotOrg;
+        private CheckBox checkBoxBitChestDotMe;
+        private PictureBox pictureBoxChallenge;
+        private TextBox textBox1;
+        private Button buttonSolveChallenge;
+        private Button buttonStart;
+        private Button buttonStop;
     }
 }
 

@@ -1,12 +1,11 @@
 ﻿namespace UberScraper {
-
     using System;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Awesomium.Core;
     using FluentAssertions;
-    using Librainian.Annotations;
+    using JetBrains.Annotations;
     using Librainian.Controls;
     using Properties;
 
