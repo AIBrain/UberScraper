@@ -1,4 +1,5 @@
 ﻿namespace UberScraper {
+
     using System;
     using System.Threading;
     using System.Threading.Tasks;
@@ -7,6 +8,7 @@
     using FluentAssertions;
     using JetBrains.Annotations;
     using Librainian.Controls;
+    using Librainian.Measurement.Time;
     using Properties;
 
     public partial class MainForm : Form {
@@ -71,6 +73,7 @@
             }
             uber.WebBrowser1 = this.webBrowser1;
             uber.WebBrowser1.Source = new Uri( "about:blank" );
+
             //uber.WebBrowser2 = this.webBrowser2;
             this.buttonStart.Usable( false );
             Console.WriteLine( "loaded." );
@@ -112,20 +115,66 @@
         }
 
         private void MainForm_FormClosed( object sender, FormClosedEventArgs e ) {
-            Console.Write( "Disposing of resources..." );
-            var uber = this.Uber;
-            if ( uber != null ) {
-                using ( uber ) {
-                    uber.Dispose();
+            using (this) {
+                Console.Write( "Disposing of resources..." );
+                var uber = this.Uber;
+                if ( uber != null ) {
+                    using (uber) {
+                        uber.Dispose();
+                    }
+                }
+                Console.WriteLine( "Resources disposed." );
+#if DEBUG
+                Console.WriteLine();
+
+                //Console.WriteLine( "Press any key to exit" );
+                Task.Delay( Seconds.Five ).Wait();
+
+                //Console.ReadKey();
+#endif
+            }
+        }
+
+        private void button1_Click( Object sender, EventArgs e ) {
+            using (var bob = new SitesEditor()) {
+                var result = bob.ShowDialog( this );
+                switch ( result ) {
+                    case DialogResult.None:
+                        break;
+
+                    case DialogResult.OK:
+                        break;
+
+                    case DialogResult.Cancel:
+                        break;
+
+                    case DialogResult.Abort:
+                        break;
+
+                    case DialogResult.Retry:
+                        break;
+
+                    case DialogResult.Ignore:
+                        break;
+
+                    case DialogResult.Yes:
+                        break;
+
+                    case DialogResult.No:
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
-            this.Dispose();
-            Console.WriteLine( "Resources disposed." );
-#if DEBUG
-            Console.WriteLine();
-            Console.WriteLine( "Press any key to exit" );
-            Console.ReadKey();
-#endif
+        }
+
+        private void Awesomium_Windows_Forms_WebControl_ShowCreatedWebView( Object sender, ShowCreatedWebViewEventArgs e ) {
+
+        }
+
+        private void Awesomium_Windows_Forms_WebControl_ShowCreatedWebView_1( Object sender, ShowCreatedWebViewEventArgs e ) {
+
         }
     }
 }

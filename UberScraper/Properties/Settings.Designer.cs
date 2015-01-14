@@ -9,17 +9,13 @@
 //------------------------------------------------------------------------------
 
 namespace UberScraper.Properties {
-    using System.CodeDom.Compiler;
-    using System.Configuration;
-    using System.Diagnostics;
-    using System.Drawing;
-    using System.Runtime.CompilerServices;
-
-    [CompilerGenerated()]
-    [GeneratedCode("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "12.0.0.0")]
-    internal sealed partial class Settings : ApplicationSettingsBase {
+    
+    
+    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
-        private static Settings defaultInstance = ((Settings)(Synchronized(new Settings())));
+        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
         public static Settings Default {
             get {
@@ -27,9 +23,9 @@ namespace UberScraper.Properties {
             }
         }
         
-        [UserScopedSetting()]
-        [DebuggerNonUserCode()]
-        [DefaultSettingValue("1")]
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public decimal numericThrottle {
             get {
                 return ((decimal)(this["numericThrottle"]));
@@ -39,9 +35,9 @@ namespace UberScraper.Properties {
             }
         }
         
-        [UserScopedSetting()]
-        [DebuggerNonUserCode()]
-        [DefaultSettingValue("True")]
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool checkedAIBrainDotOrg {
             get {
                 return ((bool)(this["checkedAIBrainDotOrg"]));
@@ -51,21 +47,21 @@ namespace UberScraper.Properties {
             }
         }
         
-        [UserScopedSetting()]
-        [DebuggerNonUserCode()]
-        [DefaultSettingValue("100, 100")]
-        public Point MainFormLocation {
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100, 100")]
+        public global::System.Drawing.Point MainFormLocation {
             get {
-                return ((Point)(this["MainFormLocation"]));
+                return ((global::System.Drawing.Point)(this["MainFormLocation"]));
             }
             set {
                 this["MainFormLocation"] = value;
             }
         }
         
-        [UserScopedSetting()]
-        [DebuggerNonUserCode()]
-        [DefaultSettingValue("True")]
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool checkedBitChest {
             get {
                 return ((bool)(this["checkedBitChest"]));
@@ -75,15 +71,26 @@ namespace UberScraper.Properties {
             }
         }
         
-        [UserScopedSetting()]
-        [DebuggerNonUserCode()]
-        [DefaultSettingValue("True")]
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool checkedLandOfBitcoin {
             get {
                 return ((bool)(this["checkedLandOfBitcoin"]));
             }
             set {
                 this["checkedLandOfBitcoin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=T:\\Databases\\SitesDatabase.md" +
+            "f;Integrated Security=True;Connect Timeout=10")]
+        public string SitesDatabaseConnectionString {
+            get {
+                return ((string)(this["SitesDatabaseConnectionString"]));
             }
         }
     }

@@ -682,11 +682,12 @@ namespace UberScraper {
 
                 String answer;
                 if ( this.SolveCaptcha( uri, cancellationToken, out answer ) ) {
-                    this.WebBrowser1.by
-                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "focus" );
-                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "scrollIntoView" );
-                    ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "click" );
-                    ByIDSetValue( this.WebBrowser1, captchaData.ResponseElementID, answer );
+
+                    //this.WebBrowser1.by
+                    //ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "focus" );
+                    //ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "scrollIntoView" );
+                    //ByIDFunction( this.WebBrowser1, captchaData.ResponseElementID, "click" );
+                    //ByIDSetValue( this.WebBrowser1, captchaData.ResponseElementID, answer );
 
                     this.Throttle( Seconds.Five );
 

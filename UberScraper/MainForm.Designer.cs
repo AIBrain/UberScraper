@@ -44,22 +44,35 @@
             this.buttonSolveChallenge = new System.Windows.Forms.Button();
             this.buttonStart = new System.Windows.Forms.Button();
             this.buttonStop = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.tabControl2 = new System.Windows.Forms.TabControl();
+            this.tabPageWebControl1 = new System.Windows.Forms.TabPage();
+            this.tabPageWebControl2 = new System.Windows.Forms.TabPage();
+            this.webControl1 = new Awesomium.Windows.Forms.WebControl(this.components);
+            this.tabPageWebControl3 = new System.Windows.Forms.TabPage();
+            this.tabPageWebControl4 = new System.Windows.Forms.TabPage();
+            this.tabPageWebControl5 = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericThrottle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxChallenge)).BeginInit();
+            this.tabControl2.SuspendLayout();
+            this.tabPageWebControl1.SuspendLayout();
+            this.tabPageWebControl2.SuspendLayout();
             this.SuspendLayout();
             // 
             // webBrowser1
             // 
-            this.webBrowser1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.webBrowser1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.webBrowser1.Location = new System.Drawing.Point(612, 58);
-            this.webBrowser1.Size = new System.Drawing.Size(929, 471);
+            this.webBrowser1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.webBrowser1.Location = new System.Drawing.Point(3, 49);
+            this.webBrowser1.Size = new System.Drawing.Size(915, 393);
             this.webBrowser1.TabIndex = 0;
             this.webBrowser1.AddressChanged += new Awesomium.Core.UrlEventHandler(this.Awesomium_Windows_Forms_WebControl_AddressChanged);
+            this.webBrowser1.ShowCreatedWebView += new Awesomium.Core.ShowCreatedWebViewEventHandler(this.Awesomium_Windows_Forms_WebControl_ShowCreatedWebView);
             this.webBrowser1.DocumentReady += new Awesomium.Core.UrlEventHandler(this.Awesomium_Windows_Forms_WebControl_DocumentReady);
             this.webBrowser1.LoadingFrame += new Awesomium.Core.LoadingFrameEventHandler(this.Awesomium_Windows_Forms_WebControl_LoadingFrame);
             this.webBrowser1.LoadingFrameComplete += new Awesomium.Core.FrameEventHandler(this.Awesomium_Windows_Forms_WebControl_LoadingFrameComplete);
@@ -67,22 +80,21 @@
             // 
             // labelBrowserSource
             // 
-            this.labelBrowserSource.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.labelBrowserSource.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.labelBrowserSource.Location = new System.Drawing.Point(612, 9);
+            this.labelBrowserSource.Dock = System.Windows.Forms.DockStyle.Top;
+            this.labelBrowserSource.Location = new System.Drawing.Point(3, 3);
             this.labelBrowserSource.Name = "labelBrowserSource";
-            this.labelBrowserSource.Size = new System.Drawing.Size(929, 23);
+            this.labelBrowserSource.Size = new System.Drawing.Size(915, 23);
             this.labelBrowserSource.TabIndex = 1;
             this.labelBrowserSource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // labelNavigationStatus
             // 
-            this.labelNavigationStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.labelNavigationStatus.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.labelNavigationStatus.Location = new System.Drawing.Point(612, 32);
+            this.labelNavigationStatus.Dock = System.Windows.Forms.DockStyle.Top;
+            this.labelNavigationStatus.Location = new System.Drawing.Point(3, 26);
             this.labelNavigationStatus.Name = "labelNavigationStatus";
-            this.labelNavigationStatus.Size = new System.Drawing.Size(929, 23);
+            this.labelNavigationStatus.Size = new System.Drawing.Size(915, 23);
             this.labelNavigationStatus.TabIndex = 2;
             this.labelNavigationStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -242,20 +254,125 @@
             this.buttonStop.Visible = false;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
+            // button1
+            // 
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button1.Location = new System.Drawing.Point(12, 41);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(70, 23);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "Sites";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // tabControl2
+            // 
+            this.tabControl2.Controls.Add(this.tabPageWebControl1);
+            this.tabControl2.Controls.Add(this.tabPageWebControl2);
+            this.tabControl2.Controls.Add(this.tabPageWebControl3);
+            this.tabControl2.Controls.Add(this.tabPageWebControl4);
+            this.tabControl2.Controls.Add(this.tabPageWebControl5);
+            this.tabControl2.Location = new System.Drawing.Point(612, 58);
+            this.tabControl2.Name = "tabControl2";
+            this.tabControl2.SelectedIndex = 0;
+            this.tabControl2.Size = new System.Drawing.Size(929, 471);
+            this.tabControl2.TabIndex = 10;
+            // 
+            // tabPageWebControl1
+            // 
+            this.tabPageWebControl1.Controls.Add(this.webBrowser1);
+            this.tabPageWebControl1.Controls.Add(this.labelNavigationStatus);
+            this.tabPageWebControl1.Controls.Add(this.labelBrowserSource);
+            this.tabPageWebControl1.Location = new System.Drawing.Point(4, 22);
+            this.tabPageWebControl1.Name = "tabPageWebControl1";
+            this.tabPageWebControl1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageWebControl1.Size = new System.Drawing.Size(921, 445);
+            this.tabPageWebControl1.TabIndex = 0;
+            this.tabPageWebControl1.Text = "tabPage3";
+            this.tabPageWebControl1.UseVisualStyleBackColor = true;
+            // 
+            // tabPageWebControl2
+            // 
+            this.tabPageWebControl2.Controls.Add(this.label2);
+            this.tabPageWebControl2.Controls.Add(this.label3);
+            this.tabPageWebControl2.Controls.Add(this.webControl1);
+            this.tabPageWebControl2.Location = new System.Drawing.Point(4, 22);
+            this.tabPageWebControl2.Name = "tabPageWebControl2";
+            this.tabPageWebControl2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageWebControl2.Size = new System.Drawing.Size(921, 445);
+            this.tabPageWebControl2.TabIndex = 1;
+            this.tabPageWebControl2.Text = "tabPage4";
+            this.tabPageWebControl2.UseVisualStyleBackColor = true;
+            // 
+            // webControl1
+            // 
+            this.webControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.webControl1.Location = new System.Drawing.Point(3, 3);
+            this.webControl1.Size = new System.Drawing.Size(915, 439);
+            this.webControl1.Source = new System.Uri("about:blank", System.UriKind.Absolute);
+            this.webControl1.TabIndex = 0;
+            this.webControl1.ShowCreatedWebView += new Awesomium.Core.ShowCreatedWebViewEventHandler(this.Awesomium_Windows_Forms_WebControl_ShowCreatedWebView_1);
+            // 
+            // tabPageWebControl3
+            // 
+            this.tabPageWebControl3.Location = new System.Drawing.Point(4, 22);
+            this.tabPageWebControl3.Name = "tabPageWebControl3";
+            this.tabPageWebControl3.Size = new System.Drawing.Size(921, 445);
+            this.tabPageWebControl3.TabIndex = 2;
+            this.tabPageWebControl3.Text = "tabPage3";
+            this.tabPageWebControl3.UseVisualStyleBackColor = true;
+            // 
+            // tabPageWebControl4
+            // 
+            this.tabPageWebControl4.Location = new System.Drawing.Point(4, 22);
+            this.tabPageWebControl4.Name = "tabPageWebControl4";
+            this.tabPageWebControl4.Size = new System.Drawing.Size(921, 445);
+            this.tabPageWebControl4.TabIndex = 3;
+            this.tabPageWebControl4.Text = "tabPage3";
+            this.tabPageWebControl4.UseVisualStyleBackColor = true;
+            // 
+            // tabPageWebControl5
+            // 
+            this.tabPageWebControl5.Location = new System.Drawing.Point(4, 22);
+            this.tabPageWebControl5.Name = "tabPageWebControl5";
+            this.tabPageWebControl5.Size = new System.Drawing.Size(921, 445);
+            this.tabPageWebControl5.TabIndex = 4;
+            this.tabPageWebControl5.Text = "tabPage3";
+            this.tabPageWebControl5.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label2.Location = new System.Drawing.Point(3, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(915, 23);
+            this.label2.TabIndex = 4;
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // label3
+            // 
+            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label3.Location = new System.Drawing.Point(3, 3);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(915, 23);
+            this.label3.TabIndex = 3;
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1553, 541);
+            this.Controls.Add(this.tabControl2);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.buttonSolveChallenge);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.pictureBoxChallenge);
             this.Controls.Add(this.tabControl1);
-            this.Controls.Add(this.labelNavigationStatus);
-            this.Controls.Add(this.labelBrowserSource);
-            this.Controls.Add(this.webBrowser1);
             this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::UberScraper.Properties.Settings.Default, "MainFormLocation", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.DoubleBuffered = true;
             this.Location = global::UberScraper.Properties.Settings.Default.MainFormLocation;
@@ -273,6 +390,9 @@
             this.tabPage2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericThrottle)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxChallenge)).EndInit();
+            this.tabControl2.ResumeLayout(false);
+            this.tabPageWebControl1.ResumeLayout(false);
+            this.tabPageWebControl2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -296,6 +416,16 @@
         private Button buttonSolveChallenge;
         private Button buttonStart;
         private Button buttonStop;
+        private Button button1;
+        private TabControl tabControl2;
+        private TabPage tabPageWebControl1;
+        private TabPage tabPageWebControl2;
+        private WebControl webControl1;
+        private TabPage tabPageWebControl3;
+        private TabPage tabPageWebControl4;
+        private TabPage tabPageWebControl5;
+        private Label label2;
+        private Label label3;
     }
 }
 
