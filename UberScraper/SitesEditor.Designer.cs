@@ -204,6 +204,7 @@
             this.Name = "SitesEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Sites Editor";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SitesEditor_FormClosed);
             this.Shown += new System.EventHandler(this.SitesEditor_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMain)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.siteEditorDataTableBindingSource)).EndInit();

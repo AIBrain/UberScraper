@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using System.Xml;
+    using JetBrains.Annotations;
     using Librainian.Controls;
     using Librainian.IO;
     using Librainian.Threading;
@@ -12,7 +13,12 @@
 
     [DataContract]
     public partial class SitesEditor : Form {
-        public SitesEditor() {
+
+        [ CanBeNull ]
+        public MainForm MainForm { get; set; }
+
+        public SitesEditor( MainForm mainForm ) {
+            this.MainForm = mainForm;
             InitializeComponent();
         }
 
@@ -164,5 +170,8 @@
             return false;
         }
 
+        private void SitesEditor_FormClosed( Object sender, FormClosedEventArgs e ) {
+            this.MainForm.SitesEditor = null;
+        }
     }
 }
