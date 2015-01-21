@@ -1,25 +1,24 @@
-﻿#region License & Information
-// This notice must be kept visible in the source.
+﻿// This notice must be kept visible in the source.
 // 
-// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified,
-// or the original license has been overwritten by the automatic formatting of this code.
-// Any unmodified sections of source code borrowed from other projects retain their original license and thanks goes to the Authors.
+// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified, or the
+// original license has been overwritten by the automatic formatting of this code. Any unmodified
+// sections of source code borrowed from other projects retain their original license and thanks
+// goes to the Authors.
 // 
 // Donations and Royalties can be paid via
 // PayPal: paypal@aibrain.org
-// bitcoin:1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
-// bitcoin:1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
-// litecoin:LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
+// bitcoin: 1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
+// bitcoin: 1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
+// litecoin: LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
 // 
-// Usage of the source code or compiled binaries is AS-IS.
-// I am not responsible for Anything You Do.
+// Usage of the source code or compiled binaries is AS-IS. I am not responsible for Anything You Do.
 // 
 // Contact me by email if you have any questions or helpful criticism.
 // 
-// "UberScraper 2015/Uber.cs" was last cleaned by Rick on 2015/01/21 at 5:20 AM
-#endregion
+// "UberScraper 2015/Uber.cs" was last cleaned by Rick on 2015/01/21 at 5:55 AM
 
 namespace UberScraper {
+
     using System;
     using System.Collections.Concurrent;
     using System.IO;
@@ -46,70 +45,72 @@ namespace UberScraper {
     using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
     public class Uber : IDisposable {
-        [NotNull]
-        private readonly ConcurrentStack<IDisposable> _autoDisposables = new ConcurrentStack<IDisposable>();
-        [NotNull]
-        private PersistTable<String, Captcha> _captchaDatabase;
-        [NotNull]
-        private PersistTable<String, String> _pastAnswers;
-        [NotNull]
-        private PersistTable<String, WebSite> _webSites;
+
         [CanBeNull]
         public TesseractEngine TesseractEngine;
+
+        [NotNull]
+        private readonly ConcurrentStack<IDisposable> _autoDisposables = new ConcurrentStack<IDisposable>();
+
+        [NotNull]
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        [CanBeNull]
+        private PersistTable<String, Captcha> _captchaDatabase;
+
+        [CanBeNull]
+        private PersistTable<String, String> _pastAnswers;
+
+        [CanBeNull]
+        private PersistTable<String, WebSite> _webSites;
 
         public Uber( [NotNull] TabControl tabControls ) {
             if ( tabControls == null ) {
                 throw new ArgumentNullException( "tabControls" );
             }
             this.TabControls = tabControls;
-            this.CancellationTokenSource = new CancellationTokenSource();
             this.NavigationTimeout = Seconds.Thirty;
         }
+
+        public CancellationTokenSource CancellationTokenSource { get { return _cancellationTokenSource; } }
+
+        public Boolean HasCaptchaDatabaseBeenConnected { get; private set; }
+
+        public Boolean HasPastAnswersBeenConnected { get; private set; }
+
+        public bool HasTessEngineBeenConnected { get; set; }
+
+        public Boolean HasWebSitesDatabaseBeenConnected { get; private set; }
+
+        /// <summary>
+        /// <para>Defaults to <see cref="Seconds.Thirty"/> in the ctor.</para>
+        /// </summary>
+        public TimeSpan NavigationTimeout { get; set; }
+
+        [CanBeNull]
+        public PictureBox PictureBoxChallenge { get; set; }
 
         [NotNull]
         public TabControl TabControls { get; private set; }
 
-        [NotNull]
-        public CancellationTokenSource CancellationTokenSource { get; private set; }
+        public void AllStop() {
+            Console.WriteLine( "Requesting source token cancel..." );
+            this.CancellationTokenSource.Cancel();
 
-        public Boolean HasCaptchaDatabaseBeenConnected { get; private set; }
-        public Boolean HasPastAnswersBeenConnected { get; private set; }
-        public bool HasTessEngineBeenConnected { get; set; }
-        public Boolean HasWebSitesDatabaseBeenConnected { get; private set; }
-
-        /// <summary>
-        ///     <para>Defaults to <see cref="Seconds.Thirty" /> in the ctor.</para>
-        /// </summary>
-        public TimeSpan NavigationTimeout { get; set; }
-
-        [NotNull]
-        public PictureBox PictureBoxChallenge { get; set; }
-
-        /// <summary>
-        ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose() {
-            try {
-                Log.Enter();
-
-                foreach ( var disposable in this._autoDisposables ) {
-                    try {
-                        Console.Write( "Disposing of {0}...", disposable );
-                        using (disposable) {
-                            disposable.Dispose();
-                        }
-                        Console.WriteLine( "Disposed of {0}.", disposable );
+            Log.Info( "Requesting browser stops..." );
+            foreach ( TabControl.TabPageCollection page in this.TabControls.TabPages ) {
+                foreach ( TabPage tabPage in page ) {
+                    var webcontrol = tabPage.Tag as WebControl;
+                    if ( null == webcontrol ) {
+                        continue;
                     }
-                    catch ( Exception exception ) {
-                        exception.More();
+                    webcontrol.Invoke( new Action( webcontrol.Stop ) );
+                    using (webcontrol) {
+                        tabPage.Tag = null;
                     }
                 }
             }
-            finally {
-                Log.Exit();
-            }
         }
-
 
         public async Task<Boolean> ConnectDatabase_Captchas() {
             try {
@@ -186,6 +187,32 @@ namespace UberScraper {
             return null != this._webSites;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting
+        /// unmanaged resources.
+        /// </summary>
+        public void Dispose() {
+            try {
+                Log.Enter();
+
+                foreach ( var disposable in this._autoDisposables ) {
+                    try {
+                        Console.Write( "Disposing of {0}...", disposable );
+                        using (disposable) {
+                            disposable.Dispose();
+                        }
+                        Console.WriteLine( "Disposed of {0}.", disposable );
+                    }
+                    catch ( Exception exception ) {
+                        exception.More();
+                    }
+                }
+            }
+            finally {
+                Log.Exit();
+            }
+        }
+
         public void EnsureWebsite( [CanBeNull] Uri uri ) {
             if ( null == uri ) {
                 return;
@@ -200,7 +227,7 @@ namespace UberScraper {
         }
 
         /// <summary>
-        ///     <para>Load tables.</para>
+        /// <para>Load tables.</para>
         /// </summary>
         /// <returns></returns>
         public async Task<Boolean> Init() {
@@ -268,38 +295,8 @@ namespace UberScraper {
             return true;
         }
 
-        [NotNull]
-        private AwesomiumWrapper PickBestBrowser( Uri uri ) {
-            var host = uri.Host;
-
-            foreach ( TabControl.TabPageCollection page in this.TabControls.TabPages ) {
-                foreach ( TabPage tabPage in page ) {
-                    var tag = tabPage.Tag as string;
-                    if ( String.IsNullOrWhiteSpace( tag ) || !Uri.IsWellFormedUriString( tag, UriKind.Absolute ) ) {
-                        continue;
-                    }
-
-                    Uri pageuri;
-                    if ( Uri.TryCreate( tag, UriKind.Absolute, out pageuri ) && pageuri.Host.Like( host ) ) {
-                        //we found a match, return the browser
-                        return new AwesomiumWrapper( tabPage.Controls.OfType< WebControl >().First(), Minutes.One );
-                    }
-                }
-            }
-
-            var newTabPage = new TabPage( host );
-
-            var newBrowser = new WebControl();
-            newTabPage.Controls.Add( newBrowser );
-            newTabPage.Tag = uri;
-
-            this.TabControls.Controls.Add( newTabPage );
-
-            return new AwesomiumWrapper( newBrowser, Minutes.One );
-        }
-
         /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha" /> .</para>
+        /// <para>Gets and sets a <see cref="Captcha"/> .</para>
         /// </summary>
         /// <param name="uri"></param>
         [NotNull]
@@ -318,27 +315,8 @@ namespace UberScraper {
             return this._captchaDatabase[ uri.AbsoluteUri ];
         }
 
-        public void AllStop() {
-            Console.WriteLine( "Requesting source token cancel..." );
-            this.CancellationTokenSource.Cancel();
-
-            Log.Info( "Requesting browser stops..." );
-            foreach ( TabControl.TabPageCollection page in this.TabControls.TabPages ) {
-                foreach ( TabPage tabPage in page ) {
-                    var webcontrol = tabPage.Tag as WebControl;
-                    if ( null == webcontrol ) {
-                        continue;
-                    }
-                    webcontrol.Invoke( new Action( webcontrol.Stop ) );
-                    using (webcontrol) {
-                        tabPage.Tag = null;
-                    }
-                }
-            }
-        }
-
         /// <summary>
-        ///     <para>Gets and sets a <see cref="Captcha" /> .</para>
+        /// <para>Gets and sets a <see cref="Captcha"/> .</para>
         /// </summary>
         /// <param name="captcha"></param>
         public void UpdateCaptchaData( Captcha captcha ) {
@@ -349,6 +327,7 @@ namespace UberScraper {
         }
 
         public void VisitSites( CancellationToken cancellationToken ) {
+
             //var faucets = ( BitcoinFaucets[] )Enum.GetValues( typeof(BitcoinFaucets) );
 
             //Console.WriteLine( "Visiting websites..." );
@@ -360,6 +339,37 @@ namespace UberScraper {
             //}
         }
 
+        [NotNull]
+        private AwesomiumWrapper PickBestBrowser( Uri uri ) {
+            var host = uri.Host;
+
+            foreach ( TabControl.TabPageCollection page in this.TabControls.TabPages ) {
+                foreach ( TabPage tabPage in page ) {
+                    var tag = tabPage.Tag as string;
+                    if ( String.IsNullOrWhiteSpace( tag ) || !Uri.IsWellFormedUriString( tag, UriKind.Absolute ) ) {
+                        continue;
+                    }
+
+                    Uri pageuri;
+                    if ( Uri.TryCreate( tag, UriKind.Absolute, out pageuri ) && pageuri.Host.Like( host ) ) {
+
+                        //we found a match, return the browser
+                        return new AwesomiumWrapper( tabPage.Controls.OfType<WebControl>().First(), Minutes.One );
+                    }
+                }
+            }
+
+            var newTabPage = new TabPage( host );
+
+            var newBrowser = new WebControl();
+            newTabPage.Controls.Add( newBrowser );
+            newTabPage.Tag = uri;
+
+            this.TabControls.Controls.Add( newTabPage );
+
+            return new AwesomiumWrapper( newBrowser, Minutes.One );
+        }
+
         //[NotNull]
         //private static string GetDescription( BitcoinFaucets faucet ) {
         //    var fi = faucet.GetType().GetField( faucet.ToString() );
@@ -368,10 +378,10 @@ namespace UberScraper {
         //}
 
         /// <summary>
-        ///     <para>Pulls the image</para>
-        ///     <para>Runs the ocr on it</para>
-        ///     <para>fills in the blanks</para>
-        ///     <para>submits the page</para>
+        /// <para>Pulls the image</para>
+        /// <para>Runs the ocr on it</para>
+        /// <para>fills in the blanks</para>
+        /// <para>submits the page</para>
         /// </summary>
         /// <param name="challenge"></param>
         /// <param name="cancellationToken"></param>
@@ -417,7 +427,6 @@ namespace UberScraper {
             this.PictureBoxChallenge.ImageLocation = document.FullPathWithFileName;
 
             this.PictureBoxChallenge.Load();
-
 
             using (var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew()) {
                 using (var page = tesseractEngine.Process( img, PageSegMode.SingleLine )) {
@@ -512,26 +521,19 @@ namespace UberScraper {
     //            return;
     //        }
 
-    //        var uri = new Uri( description );
-    //        Console.WriteLine( "Visiting (#{0}) {1} @ {2}", faucetID, description, uri.PathAndQuery );
+    // var uri = new Uri( description ); Console.WriteLine( "Visiting (#{0}) {1} @ {2}", faucetID,
+    // description, uri.PathAndQuery );
 
-    //        var navigated = this.Navigate( description );
+    // var navigated = this.Navigate( description );
 
-    //        if ( !navigated ) {
-    //            faucetID = BitcoinFaucets.AboutBlank;
-    //        }
-    //        if ( !description.StartsWith( "about:", StringComparison.OrdinalIgnoreCase ) ) {
-    //            Throttle();
-    //        }
+    // if ( !navigated ) { faucetID = BitcoinFaucets.AboutBlank; } if ( !description.StartsWith(
+    // "about:", StringComparison.OrdinalIgnoreCase ) ) { Throttle(); }
 
-    //        switch ( faucetID ) {
-    //            //case BitcoinFaucets.BitChestDotMe:
-    //            //    this.Visit_BitChestDotMe( "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationToken );
-    //            //    break;
+    // switch ( faucetID ) { //case BitcoinFaucets.BitChestDotMe: // this.Visit_BitChestDotMe(
+    // "1KEEP1Wd6KKVHJrBaB45cSHXzMJu9VWWAt", cancellationToken ); // break;
 
-    //            case BitcoinFaucets.LandOfBitCoinDotCom:
-    //                this.Visit_LandOfBitCoinDotCom( "1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE", cancellationToken );
-    //                break;
+    // case BitcoinFaucets.LandOfBitCoinDotCom: this.Visit_LandOfBitCoinDotCom(
+    // "1MpfkH1vDyGrmtykodJmzBNWi81KqXa8SE", cancellationToken ); break;
 
     //            default:
     //                this.Visit_AboutBlank();
@@ -606,39 +608,22 @@ namespace UberScraper {
     //        return;
     //    }
 
-    //    Throttle();
+    // Throttle();
 
-    //    if ( cancellationToken.IsCancellationRequested ) {
-    //        return;
-    //    }
+    // if ( cancellationToken.IsCancellationRequested ) { return; }
 
-    //    var links = this.WebBrowser1.GetAllLinks().Where( uri => uri.PathAndQuery.Contains( bitcoinAddress ) ).ToList();
+    // var links = this.WebBrowser1.GetAllLinks().Where( uri => uri.PathAndQuery.Contains(
+    // bitcoinAddress ) ).ToList();
 
-    //    Throttle();
+    // Throttle();
 
-    //    foreach ( var link in links ) {
-    //        if ( cancellationToken.IsCancellationRequested ) {
-    //            return;
-    //        }
-    //        try {
-    //            this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) ); //.Wait( this.NavigationTimeout );
-    //            Throttle();
-    //            Navigate( this, link );
+    // foreach ( var link in links ) { if ( cancellationToken.IsCancellationRequested ) { return; }
+    // try { this.Navigate( String.Format( "http://www.bitchest.me/?a={0}", bitcoinAddress ) );
+    // //.Wait( this.NavigationTimeout ); Throttle(); Navigate( this, link );
 
-    //            //this.Throttle();
-    //            try {
-    //                this.StartTheCaptchaStuff( cancellationToken );
-    //            }
-    //            catch ( Exception exception ) {
-    //                exception.More();
-    //            }
-    //        }
-    //        catch ( Exception exception ) {
-    //            exception.More();
-    //        }
-    //        finally {
-    //            Throttle();
-    //        }
+    // //this.Throttle(); try { this.StartTheCaptchaStuff( cancellationToken ); } catch ( Exception
+    // exception ) { exception.More(); } } catch ( Exception exception ) { exception.More(); }
+    // finally { Throttle(); }
 
     //        //TODO submit
     //    }
@@ -694,5 +679,4 @@ namespace UberScraper {
     //    }
     //    return null;
     //}
-
 }

@@ -85,6 +85,7 @@
             if ( null == uber ) {
                 return;
             }
+            this.buttonSiteEditor.Push();
             this.buttonStart.Usable( await uber.Init() );
         }
 
@@ -129,46 +130,27 @@
                 Console.WriteLine();
 
                 //Console.WriteLine( "Press any key to exit" );
-                Task.Delay( Seconds.Five ).Wait();
+                //Task.Delay( Seconds.One ).Wait();
 
                 //Console.ReadKey();
 #endif
             }
         }
 
-        private void button1_Click( Object sender, EventArgs e ) {
-            using (var bob = new SitesEditor()) {
-                var result = bob.ShowDialog( this );
-                switch ( result ) {
-                    case DialogResult.None:
-                        break;
-
-                    case DialogResult.OK:
-                        break;
-
-                    case DialogResult.Cancel:
-                        break;
-
-                    case DialogResult.Abort:
-                        break;
-
-                    case DialogResult.Retry:
-                        break;
-
-                    case DialogResult.Ignore:
-                        break;
-
-                    case DialogResult.Yes:
-                        break;
-
-                    case DialogResult.No:
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+        private async void buttonSiteEditor_Click( Object sender, EventArgs e ) {
+            //this.flowLayoutPanelSiteEditor.Controls.Add( new SitesEditor() );
+            if ( this.SitesEditor == null ) {
+                this.SitesEditor = new SitesEditor();
+                this.SitesEditor.ShowDialog();
+                //Application.Run( this.SitesEditor );
             }
+
+            this.SitesEditor.OnThread( () => this.SitesEditor.Show() );
+
         }
+
+        [CanBeNull]
+        public SitesEditor SitesEditor { get; set; }
 
         private void Awesomium_Windows_Forms_WebControl_ShowCreatedWebView( Object sender, ShowCreatedWebViewEventArgs e ) {
 

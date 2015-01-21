@@ -24,112 +24,169 @@
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.sitesDatabaseDataSet = new UberScraper.SitesDatabaseDataSet();
-            this.sitesDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.button1 = new System.Windows.Forms.Button();
-            this.SiteName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Wait = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.UserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Password = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.LastAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.NextAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Address = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSet)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).BeginInit();
+            this.buttonDone = new System.Windows.Forms.Button();
+            this.buttonCancel = new System.Windows.Forms.Button();
+            this.dataGridViewMain = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.userNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.passwordDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.addressDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lastAttemptDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.nextAttemptDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.siteEditorDataTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.gvDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.gvDatabaseDataSet = new UberScraper.gvDatabaseDataSet();
+            this.labelStatus = new System.Windows.Forms.Label();
+            this.progressBarMain = new System.Windows.Forms.ProgressBar();
+            this.buttonSave = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMain)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.siteEditorDataTableBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSetBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSet)).BeginInit();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // buttonDone
             // 
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            this.dataGridView1.AutoGenerateColumns = false;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.SiteName,
-            this.Wait,
-            this.UserName,
-            this.Password,
-            this.LastAttempt,
-            this.NextAttempt,
-            this.Address});
-            this.dataGridView1.DataSource = this.sitesDatabaseDataSet;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(934, 376);
-            this.dataGridView1.TabIndex = 0;
+            this.buttonDone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonDone.Location = new System.Drawing.Point(870, 341);
+            this.buttonDone.Name = "buttonDone";
+            this.buttonDone.Size = new System.Drawing.Size(52, 23);
+            this.buttonDone.TabIndex = 1;
+            this.buttonDone.Text = "Done";
+            this.buttonDone.UseVisualStyleBackColor = true;
+            this.buttonDone.Click += new System.EventHandler(this.buttonDone_Click);
             // 
-            // sitesDatabaseDataSet
+            // buttonCancel
             // 
-            this.sitesDatabaseDataSet.DataSetName = "SitesDatabaseDataSet";
-            this.sitesDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancel.Location = new System.Drawing.Point(812, 341);
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.Size = new System.Drawing.Size(52, 23);
+            this.buttonCancel.TabIndex = 2;
+            this.buttonCancel.Text = "Cancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
-            // sitesDatabaseDataSetBindingSource
+            // dataGridViewMain
             // 
-            this.sitesDatabaseDataSetBindingSource.DataSource = this.sitesDatabaseDataSet;
-            this.sitesDatabaseDataSetBindingSource.Position = 0;
+            this.dataGridViewMain.AllowUserToOrderColumns = true;
+            this.dataGridViewMain.AutoGenerateColumns = false;
+            this.dataGridViewMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn1,
+            this.dataGridViewTextBoxColumn2,
+            this.userNameDataGridViewTextBoxColumn,
+            this.passwordDataGridViewTextBoxColumn,
+            this.addressDataGridViewTextBoxColumn,
+            this.lastAttemptDataGridViewTextBoxColumn,
+            this.nextAttemptDataGridViewTextBoxColumn});
+            this.dataGridViewMain.DataSource = this.siteEditorDataTableBindingSource;
+            this.dataGridViewMain.Location = new System.Drawing.Point(12, 12);
+            this.dataGridViewMain.Name = "dataGridViewMain";
+            this.dataGridViewMain.Size = new System.Drawing.Size(910, 323);
+            this.dataGridViewMain.TabIndex = 0;
             // 
-            // button1
+            // dataGridViewTextBoxColumn1
             // 
-            this.button1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.button1.Location = new System.Drawing.Point(0, 353);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(934, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Done";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "Name";
+            this.dataGridViewTextBoxColumn1.HeaderText = "Name";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.Width = 60;
             // 
-            // SiteName
+            // dataGridViewTextBoxColumn2
             // 
-            this.SiteName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.SiteName.HeaderText = "Name";
-            this.SiteName.Name = "SiteName";
-            this.SiteName.ToolTipText = "Name of the website";
-            this.SiteName.Width = 60;
+            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dataGridViewTextBoxColumn2.DataPropertyName = "Wait";
+            this.dataGridViewTextBoxColumn2.HeaderText = "Wait";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.Width = 54;
             // 
-            // Wait
+            // userNameDataGridViewTextBoxColumn
             // 
-            this.Wait.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Wait.HeaderText = "Wait";
-            this.Wait.Name = "Wait";
-            this.Wait.Width = 54;
+            this.userNameDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.userNameDataGridViewTextBoxColumn.DataPropertyName = "User Name";
+            this.userNameDataGridViewTextBoxColumn.HeaderText = "User Name";
+            this.userNameDataGridViewTextBoxColumn.Name = "userNameDataGridViewTextBoxColumn";
+            this.userNameDataGridViewTextBoxColumn.Width = 85;
             // 
-            // UserName
+            // passwordDataGridViewTextBoxColumn
             // 
-            this.UserName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.UserName.HeaderText = "User Name";
-            this.UserName.Name = "UserName";
-            this.UserName.Width = 85;
+            this.passwordDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.passwordDataGridViewTextBoxColumn.DataPropertyName = "Password";
+            this.passwordDataGridViewTextBoxColumn.HeaderText = "Password";
+            this.passwordDataGridViewTextBoxColumn.Name = "passwordDataGridViewTextBoxColumn";
+            this.passwordDataGridViewTextBoxColumn.Width = 78;
             // 
-            // Password
+            // addressDataGridViewTextBoxColumn
             // 
-            this.Password.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            this.Password.HeaderText = "Password";
-            this.Password.Name = "Password";
-            this.Password.Width = 78;
+            this.addressDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
+            this.addressDataGridViewTextBoxColumn.DataPropertyName = "Address";
+            this.addressDataGridViewTextBoxColumn.HeaderText = "Address";
+            this.addressDataGridViewTextBoxColumn.Name = "addressDataGridViewTextBoxColumn";
+            this.addressDataGridViewTextBoxColumn.Width = 70;
             // 
-            // LastAttempt
+            // lastAttemptDataGridViewTextBoxColumn
             // 
-            this.LastAttempt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.LastAttempt.HeaderText = "Last Attempt";
-            this.LastAttempt.Name = "LastAttempt";
-            this.LastAttempt.Width = 91;
+            this.lastAttemptDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.lastAttemptDataGridViewTextBoxColumn.DataPropertyName = "LastAttempt";
+            this.lastAttemptDataGridViewTextBoxColumn.HeaderText = "LastAttempt";
+            this.lastAttemptDataGridViewTextBoxColumn.Name = "lastAttemptDataGridViewTextBoxColumn";
+            this.lastAttemptDataGridViewTextBoxColumn.Width = 88;
             // 
-            // NextAttempt
+            // nextAttemptDataGridViewTextBoxColumn
             // 
-            this.NextAttempt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.NextAttempt.HeaderText = "Next Attempt";
-            this.NextAttempt.Name = "NextAttempt";
-            this.NextAttempt.Width = 93;
+            this.nextAttemptDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.nextAttemptDataGridViewTextBoxColumn.DataPropertyName = "NextAttempt";
+            this.nextAttemptDataGridViewTextBoxColumn.HeaderText = "NextAttempt";
+            this.nextAttemptDataGridViewTextBoxColumn.Name = "nextAttemptDataGridViewTextBoxColumn";
+            this.nextAttemptDataGridViewTextBoxColumn.Width = 90;
             // 
-            // Address
+            // siteEditorDataTableBindingSource
             // 
-            this.Address.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
-            this.Address.HeaderText = "Address";
-            this.Address.Name = "Address";
-            this.Address.Width = 70;
+            this.siteEditorDataTableBindingSource.DataMember = "SiteEditorDataTable";
+            this.siteEditorDataTableBindingSource.DataSource = this.gvDatabaseDataSetBindingSource;
+            // 
+            // gvDatabaseDataSetBindingSource
+            // 
+            this.gvDatabaseDataSetBindingSource.DataSource = this.gvDatabaseDataSet;
+            this.gvDatabaseDataSetBindingSource.Position = 0;
+            // 
+            // gvDatabaseDataSet
+            // 
+            this.gvDatabaseDataSet.DataSetName = "gvDatabaseDataSet";
+            this.gvDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // labelStatus
+            // 
+            this.labelStatus.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.labelStatus.Location = new System.Drawing.Point(197, 341);
+            this.labelStatus.Name = "labelStatus";
+            this.labelStatus.Size = new System.Drawing.Size(551, 23);
+            this.labelStatus.TabIndex = 3;
+            this.labelStatus.Text = "Status";
+            this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // progressBarMain
+            // 
+            this.progressBarMain.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.progressBarMain.Location = new System.Drawing.Point(12, 341);
+            this.progressBarMain.Name = "progressBarMain";
+            this.progressBarMain.Size = new System.Drawing.Size(179, 23);
+            this.progressBarMain.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.progressBarMain.TabIndex = 4;
+            // 
+            // buttonSave
+            // 
+            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSave.Location = new System.Drawing.Point(754, 341);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(52, 23);
+            this.buttonSave.TabIndex = 5;
+            this.buttonSave.Text = "Save";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
             // SitesEditor
             // 
@@ -137,31 +194,44 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(934, 376);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.buttonSave);
+            this.Controls.Add(this.progressBarMain);
+            this.Controls.Add(this.labelStatus);
+            this.Controls.Add(this.buttonCancel);
+            this.Controls.Add(this.buttonDone);
+            this.Controls.Add(this.dataGridViewMain);
             this.DoubleBuffered = true;
             this.Name = "SitesEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Sites Editor";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSet)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).EndInit();
+            this.Shown += new System.EventHandler(this.SitesEditor_Shown);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMain)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.siteEditorDataTableBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSetBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSet)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.BindingSource sitesDatabaseDataSetBindingSource;
-        private SitesDatabaseDataSet sitesDatabaseDataSet;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn SiteName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Wait;
-        private System.Windows.Forms.DataGridViewTextBoxColumn UserName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Password;
-        private System.Windows.Forms.DataGridViewTextBoxColumn LastAttempt;
-        private System.Windows.Forms.DataGridViewTextBoxColumn NextAttempt;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Address;
+        private System.Windows.Forms.DataGridView dataGridViewMain;
+        private System.Windows.Forms.Button buttonDone;
+        private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.ProgressBar progressBarMain;
+        private System.Windows.Forms.BindingSource gvDatabaseDataSetBindingSource;
+        private gvDatabaseDataSet gvDatabaseDataSet;
+        private System.Windows.Forms.DataGridViewTextBoxColumn nameDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn waitDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn userNameDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn passwordDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn addressDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn lastAttemptDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn nextAttemptDataGridViewTextBoxColumn;
+        private System.Windows.Forms.BindingSource siteEditorDataTableBindingSource;
+        private System.Windows.Forms.Button buttonSave;
     }
 }
