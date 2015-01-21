@@ -9,6 +9,7 @@
     using JetBrains.Annotations;
     using Librainian.Controls;
     using Librainian.Measurement.Time;
+    using Librainian.Threading;
     using Properties;
 
     public partial class MainForm : Form {
@@ -65,18 +66,18 @@
         }
 
         private void MainForm_Load( object sender, EventArgs e ) {
-            Console.Write( "Loading settings..." );
+            "Loading...".Write();
             this.Uber = new Uber();
             var uber = this.Uber;
             if ( uber == null ) {
                 return;
             }
-            uber.WebBrowser1 = this.webBrowser1;
-            uber.WebBrowser1.Source = new Uri( "about:blank" );
+            //uber.WebBrowser1 = this.webBrowser1;
+            //uber.WebBrowser1.Source = new Uri( "about:blank" );
 
             //uber.WebBrowser2 = this.webBrowser2;
             this.buttonStart.Usable( false );
-            Console.WriteLine( "loaded." );
+            "loaded.".WriteLine();
         }
 
         private async void MainForm_Shown( object sender, EventArgs e ) {

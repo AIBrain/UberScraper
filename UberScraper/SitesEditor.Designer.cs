@@ -25,8 +25,6 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.sitesDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.sitesDatabaseDataSet = new UberScraper.SitesDatabaseDataSet();
             this.SiteName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Wait = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.UserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -34,6 +32,9 @@
             this.LastAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NextAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Address = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.sitesDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.sitesDatabaseDataSet = new UberScraper.SitesDatabaseDataSet();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSet)).BeginInit();
@@ -52,22 +53,12 @@
             this.LastAttempt,
             this.NextAttempt,
             this.Address});
-            this.dataGridView1.DataSource = this.sitesDatabaseDataSetBindingSource;
+            this.dataGridView1.DataSource = this.sitesDatabaseDataSet;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(934, 376);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // sitesDatabaseDataSetBindingSource
-            // 
-            this.sitesDatabaseDataSetBindingSource.DataSource = this.sitesDatabaseDataSet;
-            this.sitesDatabaseDataSetBindingSource.Position = 0;
-            // 
-            // sitesDatabaseDataSet
-            // 
-            this.sitesDatabaseDataSet.DataSetName = "SitesDatabaseDataSet";
-            this.sitesDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
             // 
             // SiteName
             // 
@@ -119,12 +110,34 @@
             this.Address.Name = "Address";
             this.Address.Width = 70;
             // 
+            // sitesDatabaseDataSetBindingSource
+            // 
+            this.sitesDatabaseDataSetBindingSource.DataSource = this.sitesDatabaseDataSet;
+            this.sitesDatabaseDataSetBindingSource.Position = 0;
+            // 
+            // sitesDatabaseDataSet
+            // 
+            this.sitesDatabaseDataSet.DataSetName = "SitesDatabaseDataSet";
+            this.sitesDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // button1
+            // 
+            this.button1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.button1.Location = new System.Drawing.Point(0, 353);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(934, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Done";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // SitesEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(934, 376);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.dataGridView1);
             this.DoubleBuffered = true;
             this.Name = "SitesEditor";
@@ -149,5 +162,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn LastAttempt;
         private System.Windows.Forms.DataGridViewTextBoxColumn NextAttempt;
         private System.Windows.Forms.DataGridViewTextBoxColumn Address;
+        private System.Windows.Forms.Button button1;
     }
 }

@@ -18,9 +18,10 @@
 // "UberScraper/BitcoinFaucets.cs" was last cleaned by Rick on 2014/09/13 at 4:05 PM
 
 namespace UberScraper {
-
+    using System;
     using System.ComponentModel;
 
+    [Obsolete("use the dialog instead")]
     public enum BitcoinFaucets {
 
         [Description("about:blank")]
