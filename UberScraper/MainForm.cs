@@ -35,39 +35,39 @@
         }
 
         private void Awesomium_Windows_Forms_WebControl_AddressChanged( object sender, UrlEventArgs e ) {
-            this.labelNavigationStatus.Text( "Address changed" );
+            //this.labelNavigationStatus.Text( "Address changed" );
         }
 
         private void Awesomium_Windows_Forms_WebControl_Crashed( object sender, CrashedEventArgs e ) {
-            this.labelNavigationStatus.Text( "Browser crashed" );
+            //this.labelNavigationStatus.Text( "Browser crashed" );
         }
 
         private void Awesomium_Windows_Forms_WebControl_DocumentReady( object sender, UrlEventArgs e ) {
-            this.labelNavigationStatus.Text( "Document ready" );
+            //this.labelNavigationStatus.Text( "Document ready" );
         }
 
         private void Awesomium_Windows_Forms_WebControl_LoadingFrame( object sender, LoadingFrameEventArgs e ) {
-            this.labelNavigationStatus.Text( "Loading frame" );
-            this.labelBrowserSource.Text( this.webBrowser1.Source.ToString() );
+            //this.labelNavigationStatus.Text( "Loading frame" );
+            //this.labelBrowserSource.Text( this.webBrowser1.Source.ToString() );
         }
 
         private void Awesomium_Windows_Forms_WebControl_LoadingFrameComplete( object sender, FrameEventArgs e ) {
-            this.labelNavigationStatus.Text( "Frame loaded" );
+            //this.labelNavigationStatus.Text( "Frame loaded" );
         }
 
         private void MainForm_FormClosing( object sender, FormClosingEventArgs e ) {
-            this.labelNavigationStatus.Text( "Form closing" );
+            //this.labelNavigationStatus.Text( "Form closing" );
             Settings.Default.Save();
 
             var uber = this.Uber;
             if ( uber != null ) {
-                uber.Stop();
+                uber.AllStop();
             }
         }
 
         private void MainForm_Load( object sender, EventArgs e ) {
             "Loading...".Write();
-            this.Uber = new Uber();
+            this.Uber = new Uber( this.tabControls );
             var uber = this.Uber;
             if ( uber == null ) {
                 return;
@@ -111,7 +111,7 @@
             Console.WriteLine( "Stop button pressed." );
             var uber = this.Uber;
             if ( uber != null ) {
-                await Task.Run( () => uber.Stop() );
+                await Task.Run( () => uber.AllStop() );
             }
         }
 

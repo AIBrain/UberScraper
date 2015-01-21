@@ -25,6 +25,9 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.sitesDatabaseDataSet = new UberScraper.SitesDatabaseDataSet();
+            this.sitesDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.button1 = new System.Windows.Forms.Button();
             this.SiteName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Wait = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.UserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -32,12 +35,9 @@
             this.LastAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NextAttempt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Address = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.sitesDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.sitesDatabaseDataSet = new UberScraper.SitesDatabaseDataSet();
-            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSet)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -59,6 +59,27 @@
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(934, 376);
             this.dataGridView1.TabIndex = 0;
+            // 
+            // sitesDatabaseDataSet
+            // 
+            this.sitesDatabaseDataSet.DataSetName = "SitesDatabaseDataSet";
+            this.sitesDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // sitesDatabaseDataSetBindingSource
+            // 
+            this.sitesDatabaseDataSetBindingSource.DataSource = this.sitesDatabaseDataSet;
+            this.sitesDatabaseDataSetBindingSource.Position = 0;
+            // 
+            // button1
+            // 
+            this.button1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.button1.Location = new System.Drawing.Point(0, 353);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(934, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Done";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // SiteName
             // 
@@ -110,27 +131,6 @@
             this.Address.Name = "Address";
             this.Address.Width = 70;
             // 
-            // sitesDatabaseDataSetBindingSource
-            // 
-            this.sitesDatabaseDataSetBindingSource.DataSource = this.sitesDatabaseDataSet;
-            this.sitesDatabaseDataSetBindingSource.Position = 0;
-            // 
-            // sitesDatabaseDataSet
-            // 
-            this.sitesDatabaseDataSet.DataSetName = "SitesDatabaseDataSet";
-            this.sitesDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
-            // 
-            // button1
-            // 
-            this.button1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.button1.Location = new System.Drawing.Point(0, 353);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(934, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Done";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // SitesEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -144,8 +144,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Sites Editor";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSet)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.sitesDatabaseDataSetBindingSource)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -155,6 +155,7 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.BindingSource sitesDatabaseDataSetBindingSource;
         private SitesDatabaseDataSet sitesDatabaseDataSet;
+        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.DataGridViewTextBoxColumn SiteName;
         private System.Windows.Forms.DataGridViewTextBoxColumn Wait;
         private System.Windows.Forms.DataGridViewTextBoxColumn UserName;
@@ -162,6 +163,5 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn LastAttempt;
         private System.Windows.Forms.DataGridViewTextBoxColumn NextAttempt;
         private System.Windows.Forms.DataGridViewTextBoxColumn Address;
-        private System.Windows.Forms.Button button1;
     }
 }
