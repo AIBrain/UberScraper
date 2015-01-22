@@ -138,16 +138,12 @@
         }
 
         private void buttonSiteEditor_Click( Object sender, EventArgs e ) {
-            //this.flowLayoutPanelSiteEditor.Controls.Add( new SitesEditor() );
+
             if ( this.SitesEditor == null ) {
                 this.SitesEditor = new SitesEditor( this );
-                //Application.Run( this.SitesEditor );
             }
 
-            this.SitesEditor.Show();
-
-            //this.SitesEditor.OnThread( () => this.SitesEditor.Show() );
-
+            this.SitesEditor.OnThread( () => this.SitesEditor.Show() );
         }
 
         [CanBeNull]

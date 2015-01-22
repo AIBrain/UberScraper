@@ -233,6 +233,9 @@
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
     <Compile Include="BitcoinFaucets.cs" />
+    <Compile Include="gvDatabaseDataSet.cs">
+      <DependentUpon>gvDatabaseDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="gvDatabaseDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
