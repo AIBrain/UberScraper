@@ -288,7 +288,6 @@
     </None>
     <None Include="iron.json" />
     <None Include="packages.config" />
-    <None Include="Properties\DataSources\SitesEditor.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -385,6 +384,9 @@
       <Project>{DA780CA0-2606-4259-91C4-3F38C5C90592}</Project>
       <Name>Tesseract</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

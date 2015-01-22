@@ -99,7 +99,7 @@ namespace UberScraper {
                     return true;
                 }
             }
-            catch ( JsonSerializationException exception ) {
+            catch ( XmlException exception ) {
                 exception.More();
             }
             return false;
@@ -110,14 +110,15 @@ namespace UberScraper {
             this.Close();
         }
 
-        private void buttonDone_Click( Object sender, EventArgs e ) {
-            this.buttonSave.Push();
+        private async void buttonDone_Click( Object sender, EventArgs e ) {
+            this.DialogResult = DialogResult.OK;
+            await Task.Run( () => { this.SaveData(); } );
             this.Close();
         }
 
-        private void buttonSave_Click( Object sender, EventArgs e ) {
+        private async void buttonSave_Click( Object sender, EventArgs e ) {
             this.DialogResult = DialogResult.OK;
-            this.SaveData();
+            await Task.Run( () => { this.SaveData(); } );
         }
 
         private void dataGridViewMain_CellContextMenuStripNeeded( Object sender, DataGridViewCellContextMenuStripNeededEventArgs e ) {
