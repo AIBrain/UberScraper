@@ -27,6 +27,12 @@
             this.buttonDone = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.dataGridViewMain = new System.Windows.Forms.DataGridView();
+            this.siteEditorDataTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.gvDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.gvDatabaseDataSet = new UberScraper.gvDatabaseDataSet();
+            this.labelStatus = new System.Windows.Forms.Label();
+            this.progressBarMain = new System.Windows.Forms.ProgressBar();
+            this.buttonSave = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.userNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -34,12 +40,6 @@
             this.addressDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.lastAttemptDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.nextAttemptDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.siteEditorDataTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.gvDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.gvDatabaseDataSet = new UberScraper.gvDatabaseDataSet();
-            this.labelStatus = new System.Windows.Forms.Label();
-            this.progressBarMain = new System.Windows.Forms.ProgressBar();
-            this.buttonSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMain)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.siteEditorDataTableBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSetBindingSource)).BeginInit();
@@ -86,6 +86,53 @@
             this.dataGridViewMain.Name = "dataGridViewMain";
             this.dataGridViewMain.Size = new System.Drawing.Size(910, 323);
             this.dataGridViewMain.TabIndex = 0;
+            this.dataGridViewMain.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dataGridViewMain_CellContextMenuStripNeeded);
+            this.dataGridViewMain.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewMain_CellMouseDown);
+            // 
+            // siteEditorDataTableBindingSource
+            // 
+            this.siteEditorDataTableBindingSource.DataMember = "SiteEditorDataTable";
+            this.siteEditorDataTableBindingSource.DataSource = this.gvDatabaseDataSetBindingSource;
+            // 
+            // gvDatabaseDataSetBindingSource
+            // 
+            this.gvDatabaseDataSetBindingSource.DataSource = this.gvDatabaseDataSet;
+            this.gvDatabaseDataSetBindingSource.Position = 0;
+            // 
+            // gvDatabaseDataSet
+            // 
+            this.gvDatabaseDataSet.DataSetName = "gvDatabaseDataSet";
+            this.gvDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // labelStatus
+            // 
+            this.labelStatus.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.labelStatus.Location = new System.Drawing.Point(197, 341);
+            this.labelStatus.Name = "labelStatus";
+            this.labelStatus.Size = new System.Drawing.Size(551, 23);
+            this.labelStatus.TabIndex = 3;
+            this.labelStatus.Text = "Status";
+            this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // progressBarMain
+            // 
+            this.progressBarMain.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.progressBarMain.Location = new System.Drawing.Point(12, 341);
+            this.progressBarMain.Name = "progressBarMain";
+            this.progressBarMain.Size = new System.Drawing.Size(179, 23);
+            this.progressBarMain.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.progressBarMain.TabIndex = 4;
+            // 
+            // buttonSave
+            // 
+            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSave.Location = new System.Drawing.Point(754, 341);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(52, 23);
+            this.buttonSave.TabIndex = 5;
+            this.buttonSave.Text = "Save";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -143,63 +190,18 @@
             this.nextAttemptDataGridViewTextBoxColumn.Name = "nextAttemptDataGridViewTextBoxColumn";
             this.nextAttemptDataGridViewTextBoxColumn.Width = 90;
             // 
-            // siteEditorDataTableBindingSource
-            // 
-            this.siteEditorDataTableBindingSource.DataMember = "SiteEditorDataTable";
-            this.siteEditorDataTableBindingSource.DataSource = this.gvDatabaseDataSetBindingSource;
-            // 
-            // gvDatabaseDataSetBindingSource
-            // 
-            this.gvDatabaseDataSetBindingSource.DataSource = this.gvDatabaseDataSet;
-            this.gvDatabaseDataSetBindingSource.Position = 0;
-            // 
-            // gvDatabaseDataSet
-            // 
-            this.gvDatabaseDataSet.DataSetName = "gvDatabaseDataSet";
-            this.gvDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
-            // 
-            // labelStatus
-            // 
-            this.labelStatus.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.labelStatus.Location = new System.Drawing.Point(197, 341);
-            this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(551, 23);
-            this.labelStatus.TabIndex = 3;
-            this.labelStatus.Text = "Status";
-            this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // progressBarMain
-            // 
-            this.progressBarMain.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.progressBarMain.Location = new System.Drawing.Point(12, 341);
-            this.progressBarMain.Name = "progressBarMain";
-            this.progressBarMain.Size = new System.Drawing.Size(179, 23);
-            this.progressBarMain.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.progressBarMain.TabIndex = 4;
-            // 
-            // buttonSave
-            // 
-            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSave.Location = new System.Drawing.Point(754, 341);
-            this.buttonSave.Name = "buttonSave";
-            this.buttonSave.Size = new System.Drawing.Size(52, 23);
-            this.buttonSave.TabIndex = 5;
-            this.buttonSave.Text = "Save";
-            this.buttonSave.UseVisualStyleBackColor = true;
-            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-            // 
             // SitesEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(934, 376);
+            this.Controls.Add(this.dataGridViewMain);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.progressBarMain);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonDone);
-            this.Controls.Add(this.dataGridViewMain);
             this.DoubleBuffered = true;
             this.Name = "SitesEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -223,8 +225,8 @@
         private System.Windows.Forms.ProgressBar progressBarMain;
         private System.Windows.Forms.BindingSource gvDatabaseDataSetBindingSource;
         private gvDatabaseDataSet gvDatabaseDataSet;
-        private System.Windows.Forms.DataGridViewTextBoxColumn nameDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn waitDataGridViewTextBoxColumn;
+        private System.Windows.Forms.BindingSource siteEditorDataTableBindingSource;
+        private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn userNameDataGridViewTextBoxColumn;
@@ -232,7 +234,5 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn addressDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn lastAttemptDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn nextAttemptDataGridViewTextBoxColumn;
-        private System.Windows.Forms.BindingSource siteEditorDataTableBindingSource;
-        private System.Windows.Forms.Button buttonSave;
     }
 }

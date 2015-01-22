@@ -419,7 +419,7 @@ namespace UberScraper {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public SiteEditorDataTableRow AddSiteEditorDataTableRow(string Name, string Wait, string User_Name, string Password, string Address, string LastAttempt, string NextAttempt) {
+            public SiteEditorDataTableRow AddSiteEditorDataTableRow(string Name, ushort Wait, string User_Name, string Password, string Address, System.DateTime LastAttempt, System.DateTime NextAttempt) {
                 SiteEditorDataTableRow rowSiteEditorDataTableRow = ((SiteEditorDataTableRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         Name,
@@ -465,7 +465,7 @@ namespace UberScraper {
             private void InitClass() {
                 this.columnName = new global::System.Data.DataColumn("Name", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnName);
-                this.columnWait = new global::System.Data.DataColumn("Wait", typeof(string), null, global::System.Data.MappingType.Element);
+                this.columnWait = new global::System.Data.DataColumn("Wait", typeof(ushort), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnWait);
                 this.columnUser_Name = new global::System.Data.DataColumn("User Name", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnUser_Name);
@@ -473,9 +473,9 @@ namespace UberScraper {
                 base.Columns.Add(this.columnPassword);
                 this.columnAddress = new global::System.Data.DataColumn("Address", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnAddress);
-                this.columnLastAttempt = new global::System.Data.DataColumn("LastAttempt", typeof(string), null, global::System.Data.MappingType.Element);
+                this.columnLastAttempt = new global::System.Data.DataColumn("LastAttempt", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnLastAttempt);
-                this.columnNextAttempt = new global::System.Data.DataColumn("NextAttempt", typeof(string), null, global::System.Data.MappingType.Element);
+                this.columnNextAttempt = new global::System.Data.DataColumn("NextAttempt", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnNextAttempt);
             }
             
@@ -635,10 +635,10 @@ namespace UberScraper {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public string Wait {
+            public ushort Wait {
                 get {
                     try {
-                        return ((string)(this[this.tableSiteEditorDataTable.WaitColumn]));
+                        return ((ushort)(this[this.tableSiteEditorDataTable.WaitColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
                         throw new global::System.Data.StrongTypingException("The value for column \'Wait\' in table \'SiteEditorDataTable\' is DBNull.", e);
@@ -699,10 +699,10 @@ namespace UberScraper {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public string LastAttempt {
+            public System.DateTime LastAttempt {
                 get {
                     try {
-                        return ((string)(this[this.tableSiteEditorDataTable.LastAttemptColumn]));
+                        return ((global::System.DateTime)(this[this.tableSiteEditorDataTable.LastAttemptColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
                         throw new global::System.Data.StrongTypingException("The value for column \'LastAttempt\' in table \'SiteEditorDataTable\' is DBNull.", e);
@@ -715,10 +715,10 @@ namespace UberScraper {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public string NextAttempt {
+            public System.DateTime NextAttempt {
                 get {
                     try {
-                        return ((string)(this[this.tableSiteEditorDataTable.NextAttemptColumn]));
+                        return ((global::System.DateTime)(this[this.tableSiteEditorDataTable.NextAttemptColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
                         throw new global::System.Data.StrongTypingException("The value for column \'NextAttempt\' in table \'SiteEditorDataTable\' is DBNull.", e);

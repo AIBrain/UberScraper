@@ -85,8 +85,8 @@
             if ( null == uber ) {
                 return;
             }
-            this.buttonSiteEditor.Push();
             this.buttonStart.Usable( await uber.Init() );
+            this.buttonSiteEditor.Push();
         }
 
         private async void buttonStart_Click( object sender, EventArgs e ) {
