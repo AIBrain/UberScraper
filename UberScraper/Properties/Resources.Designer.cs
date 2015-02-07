@@ -61,6 +61,15 @@ namespace UberScraper.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*.
+        /// </summary>
+        internal static string AVTestString {
+            get {
+                return ResourceManager.GetString("AVTestString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting OCR on {0}.
         /// </summary>
         internal static string Uber_SolveCaptcha_Attempting_OCR_on__0_ {

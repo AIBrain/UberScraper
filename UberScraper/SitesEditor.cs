@@ -163,10 +163,6 @@ namespace UberScraper {
 
         private async void SitesEditor_Shown( Object sender, EventArgs e ) {
             await Task.Run( () => this.LoadData() );
-
-            //this.Invalidate( this.ClientRectangle, true );
-            //this.dataGridViewMain.Refresh();
-            //this.Refresh();
         }
     }
 }
