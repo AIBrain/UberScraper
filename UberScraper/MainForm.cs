@@ -39,7 +39,6 @@ namespace UberScraper {
 		public MainForm() {
 			AwesomiumContext = SynchronizationContext.Current;
 			this.InitializeComponent();
-			AwesomiumContext.Should().NotBeNull();
 		}
 
 		public SynchronizationContext AwesomiumContext { get; }
@@ -52,7 +51,7 @@ namespace UberScraper {
 
 		private void MainForm_FormClosing( object sender, FormClosingEventArgs e ) {
 			Settings.Default.Save();
-			this.Uber?.AllStop();
+			this.Uber?.RequestStop();
 		}
 
 		/// <summary>
@@ -64,8 +63,11 @@ namespace UberScraper {
 			this.SitesEditor = new SitesEditor( this );
 			this.SitesEditor.OnThread( () => this.SitesEditor.Show() );
 
+			AwesomiumContext.Should().NotBeNull();
+
 			this.Uber = new Uber( this.tabControls, this.pictureBoxChallenge, this.SitesEditor, AwesomiumContext );
-			if ( this.Uber == null ) {
+			this.Uber.Should().NotBeNull();
+            if ( this.Uber == null ) {
 				throw new NullReferenceException( "this.Uber" );
 			}
 			this.buttonSiteEditor.Push();
@@ -75,7 +77,7 @@ namespace UberScraper {
 			"Stop button pressed.".WriteLine();
 			var uber = this.Uber;
 			if ( uber != null ) {
-				await Task.Run( () => uber.AllStop() );
+				await Task.Run( () => uber.RequestStop() );
 			}
 		}
 

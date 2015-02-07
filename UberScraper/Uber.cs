@@ -1,21 +1,25 @@
-﻿// This notice must be kept visible in the source.
-// 
-// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified, or the
-// original license has been overwritten by the automatic formatting of this code. Any unmodified
-// sections of source code borrowed from other projects retain their original license and thanks
-// goes to the Authors.
-// 
+﻿#region License & Information
+
+// This notice must be kept visible in the source.
+//
+// This section of source code belongs to Rick@AIBrain.Org unless otherwise specified,
+// or the original license has been overwritten by the automatic formatting of this code.
+// Any unmodified sections of source code borrowed from other projects retain their original license and thanks goes to the Authors.
+//
 // Donations and Royalties can be paid via
 // PayPal: paypal@aibrain.org
-// bitcoin: 1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
-// bitcoin: 1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
-// litecoin: LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
-// 
-// Usage of the source code or compiled binaries is AS-IS. I am not responsible for Anything You Do.
-// 
+// bitcoin:1Mad8TxTqxKnMiHuZxArFvX8BuFEB9nqX2
+// bitcoin:1NzEsF7eegeEWDr5Vr9sSSgtUC4aL6axJu
+// litecoin:LeUxdU2w3o6pLZGVys5xpDZvvo8DUrjBp9
+//
+// Usage of the source code or compiled binaries is AS-IS.
+// I am not responsible for Anything You Do.
+//
 // Contact me by email if you have any questions or helpful criticism.
-// 
-// "UberScraper 2015/Uber.cs" was last cleaned by Rick on 2015/01/21 at 5:55 AM
+//
+// "UberScraper 2015/Uber.cs" was last cleaned by Rick on 2015/02/07 at 7:32 AM
+
+#endregion License & Information
 
 namespace UberScraper {
 
@@ -46,17 +50,17 @@ namespace UberScraper {
 
 	public class Uber : IDisposable {
 
-		[NotNull]
-		public SynchronizationContext Context { get; }
+		[CanBeNull]
+		private PersistTable<String, String> _answers;
 
-		public TabControl TabControls { get; }
-		public PictureBox PictureBox { get; }
-		public SitesEditor SitesEditor { get; set; }
+		[CanBeNull]
+		private PersistTable<String, Captcha> _captchaDatabase;
 
-		/// <summary>
-		/// <para>Defaults to <see cref="Seconds.Thirty"/> in the ctor.</para>
-		/// </summary>
-		public TimeSpan NavigationTimeout { get; set; }
+		[CanBeNull]
+		private TesseractEngine _tesseractEngine;
+
+		[CanBeNull]
+		private PersistTable<String, WebSite> _webSites;
 
 		public Uber( [NotNull] TabControl tabControls, [NotNull] PictureBox pictureBox, [NotNull] SitesEditor sitesEditor, [NotNull] SynchronizationContext context ) {
 			if ( tabControls == null ) {
@@ -76,41 +80,28 @@ namespace UberScraper {
 			this.SitesEditor = sitesEditor;
 			this.Context = context;
 			this.NavigationTimeout = Seconds.Thirty;
-			this.Running = Task.Run( () => this.Start() );
+			this.Running = Task.Run( () => this.Run() );
 		}
 
-		private void Start() {
-			Log.Enter();
+		[NotNull]
+		public SynchronizationContext Context { get; }
 
-			try {
-				Parallel.Invoke( ThreadingExtensions.Parallelism, () => VerifyNotNull( this.TabControls ), () => VerifyNotNull( this.PictureBox ), () => VerifyNotNull( this.CaptchaDatabase ), () => VerifyNotNull( this.WebSites ), () => VerifyNotNull( this.Answers ), () => VerifyNotNull( this.SitesEditor ) );
-			}
-			catch ( AggregateException exception) {
-				foreach ( var innerException in exception.InnerExceptions ) {
-					innerException.More();
-				}
-            }
-			
+		public TabControl TabControls { get; }
 
-			//TODO	//create timers and awesomewrappers based upon rows found in siteEditor
-			Log.Exit();
-		}
+		public PictureBox PictureBox { get; }
 
-		private static void VerifyNotNull<TKey>( TKey obj ) {
-			if ( null == obj ) {
-				throw new ArgumentNullException();
-			}
-		}
+		public SitesEditor SitesEditor { get; set; }
+
+		/// <summary>
+		///     <para>Defaults to <see cref="Seconds.Thirty" /> in the ctor.</para>
+		/// </summary>
+		public TimeSpan NavigationTimeout { get; set; }
 
 		public Task Running { get; }
 
 		[NotNull]
 		public SimpleCancel MainCancel { get; }
 		= new SimpleCancel();
-
-
-		[CanBeNull]
-		private PersistTable<String, Captcha> _captchaDatabase;
 
 		[NotNull]
 		public PersistTable<String, Captcha> CaptchaDatabase {
@@ -121,7 +112,7 @@ namespace UberScraper {
 
 				try {
 					"Loading captcha database".Info();
-					this._captchaDatabase = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
+					this._captchaDatabase = new PersistTable<String, Captcha>( Environment. SpecialFolder.CommonApplicationData, "Captchas" );
 					this.AutoDisposables.Push( this._captchaDatabase );
 					return this._captchaDatabase;
 				}
@@ -139,9 +130,6 @@ namespace UberScraper {
 				}
 			}
 		}
-
-		[CanBeNull]
-		private PersistTable<String, WebSite> _webSites;
 
 		[NotNull]
 		public PersistTable<String, WebSite> WebSites {
@@ -170,9 +158,6 @@ namespace UberScraper {
 			}
 		}
 
-		[CanBeNull]
-		private PersistTable<String, String> _answers;
-
 		[NotNull]
 		public PersistTable<String, String> Answers {
 			get {
@@ -200,11 +185,7 @@ namespace UberScraper {
 			}
 		}
 
-		[CanBeNull]
-		private TesseractEngine _tesseractEngine;
-
 		/// <summary>
-		/// 
 		/// </summary>
 		/// <exception cref="TesseractException"></exception>
 		[NotNull]
@@ -225,35 +206,13 @@ namespace UberScraper {
 			}
 		}
 
-
-
 		[NotNull]
 		private ConcurrentStack<IDisposable> AutoDisposables { get; }
 		= new ConcurrentStack<IDisposable>();
 
-		public void AllStop() {
-			"Requesting cancel...".WriteLine();
-			this.MainCancel.Cancel();
-
-			"Requesting browser stops...".Info();
-			foreach ( TabControl.TabPageCollection page in this.TabControls.TabPages ) {
-				foreach ( TabPage tabPage in page ) {
-					var webcontrol = tabPage.Tag as WebControl;
-					if ( null == webcontrol ) {
-						continue;
-					}
-					webcontrol.Invoke( new Action( webcontrol.Stop ) );
-					using (webcontrol) {
-						tabPage.Tag = null;
-					}
-				}
-			}
-		}
-
-
 		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting
-		/// unmanaged resources.
+		///     Performs application-defined tasks associated with freeing, releasing, or resetting
+		///     unmanaged resources.
 		/// </summary>
 		public void Dispose() {
 			try {
@@ -277,6 +236,53 @@ namespace UberScraper {
 			}
 		}
 
+		private void Run() {
+			Log.Enter();
+
+			try {
+				Parallel.Invoke( ThreadingExtensions.Parallelism, () => VerifyNotNull( this.TabControls ), () => VerifyNotNull( this.PictureBox ), () => VerifyNotNull( this.CaptchaDatabase ), () => VerifyNotNull( this.WebSites ), () => VerifyNotNull( this.Answers ), () => VerifyNotNull( this.SitesEditor ) );
+			}
+			catch ( AggregateException exception ) {
+				foreach ( var innerException in exception.InnerExceptions ) {
+					innerException.More();
+				}
+			}
+
+			//TODO	//create timers and awesomewrappers based upon rows found in siteEditor
+			Log.Exit();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="TKey"></typeparam>
+		/// <param name="obj"></param>
+		// ReSharper disable once UnusedParameter.Local
+		private static void VerifyNotNull<TKey>( [ CanBeNull ] TKey obj ) {
+			if ( null == obj ) {
+				throw new ArgumentNullException();
+			}
+		}
+
+		public void RequestStop() {
+			"Requesting cancel...".WriteLine();
+			this.MainCancel.Cancel();
+
+			"Requesting browser stops...".Info();
+			foreach ( TabControl.TabPageCollection tabPages in this.TabControls.TabPages ) {
+				foreach ( TabPage tabPage in tabPages ) {
+					var webcontrol = tabPage.Tag as WebControl;
+					if ( null == webcontrol ) {
+						continue;
+					}
+					webcontrol.Invoke( new Action( webcontrol.Stop ) );
+					using (webcontrol) {
+						tabPage.Tag = null;
+					}
+				}
+			}
+		}
+
 		public void EnsureWebsite( [CanBeNull] Uri uri ) {
 			if ( null == uri ) {
 				return;
@@ -294,8 +300,6 @@ namespace UberScraper {
 			}
 			webSites[ uri.AbsoluteUri ].Location = uri;
 		}
-
-
 
 		///// <summary>
 		/////     <para>Starts a <see cref="Task" /> to navigate to the specified <paramref name="uriString" />.</para>
@@ -339,13 +343,15 @@ namespace UberScraper {
 				throw new ArgumentNullException( "uri" );
 			}
 
-			var captcha = this.CaptchaDatabase[ uri.AbsoluteUri ] ?? ( this.CaptchaDatabase[ uri.AbsoluteUri ] = new Captcha { Uri = uri } );
+			var captcha = this.CaptchaDatabase[ uri.AbsoluteUri ] ?? ( this.CaptchaDatabase[ uri.AbsoluteUri ] = new Captcha {
+				Uri = uri
+			} );
 
 			return captcha;
 		}
 
 		/// <summary>
-		/// <para>Gets and sets a <see cref="Captcha"/> .</para>
+		///     <para>Gets and sets a <see cref="Captcha" /> .</para>
 		/// </summary>
 		/// <param name="captcha"></param>
 		public void PutCaptchaData( [NotNull] Captcha captcha ) {
@@ -359,7 +365,6 @@ namespace UberScraper {
 		}
 
 		public void VisitSites( CancellationToken cancellationToken ) {
-
 			//var faucets = ( BitcoinFaucets[] )Enum.GetValues( typeof(BitcoinFaucets) );
 
 			//Console.WriteLine( "Visiting websites..." );
@@ -384,7 +389,6 @@ namespace UberScraper {
 
 					Uri pageuri;
 					if ( Uri.TryCreate( tag, UriKind.Absolute, out pageuri ) && pageuri.Host.Like( host ) ) {
-
 						//we found a match, return the browser
 						return new AwesomiumWrapper( webControl: tabPage.Controls.OfType<WebControl>().First(), timeout: Minutes.One );
 					}
@@ -410,10 +414,10 @@ namespace UberScraper {
 		//}
 
 		/// <summary>
-		/// <para>Pulls the image</para>
-		/// <para>Runs the ocr on it</para>
-		/// <para>fills in the blanks</para>
-		/// <para>submits the page</para>
+		///     <para>Pulls the image</para>
+		///     <para>Runs the ocr on it</para>
+		///     <para>fills in the blanks</para>
+		///     <para>submits the page</para>
 		/// </summary>
 		/// <param name="challenge"></param>
 		/// <param name="cancellationToken"></param>
