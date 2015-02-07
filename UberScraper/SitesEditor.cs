@@ -18,21 +18,19 @@
 // "UberScraper 2015/SitesEditor.cs" was last cleaned by Rick on 2015/01/22 at 6:03 AM
 
 namespace UberScraper {
+	using System;
+	using System.Data;
+	using System.Drawing;
+	using System.Runtime.Serialization;
+	using System.Threading.Tasks;
+	using System.Windows.Forms;
+	using System.Xml;
+	using JetBrains.Annotations;
+	using Librainian.Controls;
+	using Librainian.IO;
+	using Librainian.Threading;
 
-    using System;
-    using System.Data;
-    using System.Drawing;
-    using System.Runtime.Serialization;
-    using System.Threading.Tasks;
-    using System.Windows.Forms;
-    using System.Xml;
-    using JetBrains.Annotations;
-    using Librainian.Controls;
-    using Librainian.IO;
-    using Librainian.Threading;
-    using Newtonsoft.Json;
-
-    [DataContract]
+	[DataContract]
     public partial class SitesEditor : Form {
         public const String ConfigFileName = "Sites.xml";
         private readonly Folder _dataFolder = new Folder( Environment.SpecialFolder.LocalApplicationData, null, null, "siteEditor" );
@@ -81,7 +79,7 @@ namespace UberScraper {
                     this.progressBarMain.Values( 0, ( int )size, ( int )size );
                 }
 
-                this.OnThread( () => this.siteEditorDataTableBindingSource.ResetBindings( false ) ); //also adjusts the column headers
+                this.OnThread( () => this.siteEditorDataTableBindingSource.ResetBindings( false ) ); //also adjusts the column header widths
             } );
             this.progressBarMain.Usable( false );
         }

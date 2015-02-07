@@ -1,18 +1,16 @@
 ﻿namespace UberScraper {
+	using System;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using System.Windows.Forms;
+	using Awesomium.Core;
+	using FluentAssertions;
+	using JetBrains.Annotations;
+	using Librainian.Controls;
+	using Librainian.Threading;
+	using Properties;
 
-    using System;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Windows.Forms;
-    using Awesomium.Core;
-    using FluentAssertions;
-    using JetBrains.Annotations;
-    using Librainian.Controls;
-    using Librainian.Measurement.Time;
-    using Librainian.Threading;
-    using Properties;
-
-    public partial class MainForm : Form {
+	public partial class MainForm : Form {
 
         public MainForm() {
             AwesomiumContext = SynchronizationContext.Current;
