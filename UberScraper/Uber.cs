@@ -248,6 +248,9 @@ namespace UberScraper {
 				}
 			}
 
+			var nextSite =  this.SitesEditor.Data .or
+
+
 			//TODO	//create timers and awesomewrappers based upon rows found in siteEditor
 			Log.Exit();
 		}

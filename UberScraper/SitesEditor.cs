@@ -19,150 +19,190 @@
 
 namespace UberScraper {
 	using System;
+	using System.Collections.Generic;
 	using System.Data;
 	using System.Drawing;
+	using System.Linq;
 	using System.Runtime.Serialization;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using System.Windows.Forms;
 	using System.Xml;
 	using JetBrains.Annotations;
 	using Librainian.Controls;
 	using Librainian.IO;
+	using Librainian.Measurement.Time;
 	using Librainian.Threading;
 
 	[DataContract]
-    public partial class SitesEditor : Form {
-        public const String ConfigFileName = "Sites.xml";
-        private readonly Folder _dataFolder = new Folder( Environment.SpecialFolder.LocalApplicationData, null, null, "siteEditor" );
+	public partial class SitesEditor : Form {
 
-        public SitesEditor( MainForm mainForm ) {
-            this.MainForm = mainForm;
-            InitializeComponent();
-        }
+		public const String ConfigFileName = "Sites.xml";
 
-        [CanBeNull]
-        public MainForm MainForm { get; set; }
+		private readonly Folder _dataFolder = new Folder( Environment.SpecialFolder.LocalApplicationData, null, null, "siteEditor" );
 
-        public async void LoadData() {
-            this.dataGridViewMain.SelectAll();
-            this.dataGridViewMain.ClearSelection();
-            this.progressBarMain.Usable( true );
-            this.progressBarMain.Values( 0, 1, 2 );
-            this.progressBarMain.Style( ProgressBarStyle.Marquee );
+		public SitesEditor( MainForm mainForm ) {
+			this.MainForm = mainForm;
+			InitializeComponent();
+		}
 
-            await Task.Run( () => {
-                if ( !this._dataFolder.Exists() ) {
-                    return;
-                }
+		[CanBeNull]
+		public MainForm MainForm { get; }
 
-                var document = new Document( this._dataFolder, ConfigFileName );
-                if ( !document.Exists() ) {
-                    return;
-                }
+		public class SiteData {
+			public String Name;
+			public int Wait;
+			public String UserName;
+			public String Password;
+			public Uri Address;
+			public DateTime LastAttempt;
+			public DateTime IdealNextAttempt;
+		}
 
-                this.progressBarMain.Usable( true );
-                this.progressBarMain.Values( 0, 500, 1000 );
-                this.progressBarMain.Style( ProgressBarStyle.Continuous );
+		public IEnumerable<SiteData> Data => Enumerable.Select( this.gvDatabaseDataSet.Tables[ 0 ].AsEnumerable(), row => new SiteData {
+			Name = row.Field<String>( "Name" ),
+			Wait = row.Field<int>( "Wait" ),
+			UserName = row.Field<String>( "UserName" ),
+			Password = row.Field<String>( "Password" ),
+			Address = row.Field<Uri>( "Address" ),
+			LastAttempt = row.Field<DateTime>( "LastAttempt" ),
+			IdealNextAttempt = row.Field<DateTime>( "LastAttempt" ) + new Minutes( row.Field<int>( "Wait" ) ),
+		} );
 
-                var size = new Document( document.FullPathWithFileName ).Size;
-                if ( size.HasValue ) {
-                    this.progressBarMain.Values( 0, 0, ( int )size );
-                }
+		private readonly SemaphoreSlim _access = new SemaphoreSlim( initialCount: 1, maxCount: 1 );
 
-                using (var reader = XmlReader.Create( document.FullPathWithFileName )) {
+		public void LoadData() {
+			if ( !this._access.Wait( Seconds.Ten ) ) {
+				return;
+			}
+			try {
+				"Loading sites data...".WriteLine();
+				this.dataGridViewMain.SelectAll();
+				this.dataGridViewMain.ClearSelection();
+				//this.progressBarMain.Usable( true );
+				//this.progressBarMain.Values( 0, 1, 2 );
+				//this.progressBarMain.Style( ProgressBarStyle.Marquee );
 
-                    //TODO using ( var ps = new ProgressStream( reader ) ) { }
-                    this.gvDatabaseDataSet.ReadXml( reader );
-                }
+				if ( this._dataFolder.Exists() ) {
+					var document = new Document( this._dataFolder, ConfigFileName );
+					if ( document.Exists() ) {
+						//this.progressBarMain.Usable( true );
+						//this.progressBarMain.Values( 0, 500, 1000 );
+						//this.progressBarMain.Style( ProgressBarStyle.Continuous );
 
-                if ( size.HasValue ) {
-                    this.progressBarMain.Values( 0, ( int )size, ( int )size );
-                }
+						var size = new Document( document.FullPathWithFileName ).Size;
+						if ( size.HasValue ) {
+							//this.progressBarMain.Values( 0, 0, ( int ) size );
+						}
 
-                this.OnThread( () => this.siteEditorDataTableBindingSource.ResetBindings( false ) ); //also adjusts the column header widths
-            } );
-            this.progressBarMain.Usable( false );
-        }
+						using (var reader = XmlReader.Create( document.FullPathWithFileName )) {
+							//TODO using ( var ps = new ProgressStream( reader ) ) { }
+							this.gvDatabaseDataSet.ReadXml( reader );
+						}
 
-        public Boolean SaveData() {
-            try {
-                this._dataFolder.Create();
+						if ( size.HasValue ) {
+							//this.progressBarMain.Values( 0, ( int ) size, ( int ) size );
+						}
 
-                var document = new Document( this._dataFolder, ConfigFileName );
+						this.OnThread( () => this.siteEditorDataTableBindingSource.ResetBindings( false ) ); //also adjusts the column header widths
 
-                using (var writer = XmlWriter.Create( document.FullPathWithFileName )) {
-                    this.gvDatabaseDataSet.RemotingFormat = SerializationFormat.Xml;
-                    this.gvDatabaseDataSet.WriteXml( writer, XmlWriteMode.WriteSchema );
+						//this.progressBarMain.Usable( false );
+					}
+				}
+				"Done loading sites data".WriteLine();
+			}
+			finally {
+				this._access.Release();
+			}
+		}
 
-                    return true;
-                }
-            }
-            catch ( XmlException exception ) {
-                exception.More();
-            }
-            return false;
-        }
+		public void SaveData() {
+			if ( !this._access.Wait( Seconds.Ten ) ) {
+				return;
+			}
+			try {
+				"Saving sites data".WriteLine();
+				try {
+					this._dataFolder.Create();
 
-        private void buttonCancel_Click( Object sender, EventArgs e ) {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
-        }
+					var document = new Document( this._dataFolder, ConfigFileName );
 
-        private async void buttonDone_Click( Object sender, EventArgs e ) {
-            this.DialogResult = DialogResult.OK;
-            await Task.Run( () => { this.SaveData(); } );
-            this.Close();
-        }
+					using (var writer = XmlWriter.Create( document.FullPathWithFileName )) {
+						this.gvDatabaseDataSet.RemotingFormat = SerializationFormat.Xml;
+						this.gvDatabaseDataSet.WriteXml( writer, XmlWriteMode.WriteSchema );
+					}
+				}
+				catch ( XmlException exception ) {
+					exception.More();
+				}
+				"Done saving sites data".WriteLine();
+			}
+			finally {
+				this._access.Release();
+			}
 
-        private async void buttonSave_Click( Object sender, EventArgs e ) {
-            this.DialogResult = DialogResult.OK;
-            await Task.Run( () => { this.SaveData(); } );
-        }
+		}
 
-        private void dataGridViewMain_CellContextMenuStripNeeded( Object sender, DataGridViewCellContextMenuStripNeededEventArgs e ) {
-            if ( e.ColumnIndex == -1 || e.RowIndex == -1 ) {
-                return;
-            }
-            var contextMenu = new ContextMenu();
-            var cell = this.dataGridViewMain[ e.ColumnIndex, e.RowIndex ];
+		/*
+				private void buttonCancel_Click( Object sender, EventArgs e ) {
+					this.DialogResult = DialogResult.Cancel;
+					this.Close();
+				}
+		*/
 
-            if ( cell.ValueType == typeof(DateTime) ) {
-                var menuItem = new MenuItem( "Insert Now" );
-                menuItem.Click += ( o, args ) => cell.Value = DateTime.Now;
+		/*
+				private async void buttonDone_Click( Object sender, EventArgs e ) {
+					this.DialogResult = DialogResult.OK;
+					await Task.Run( () => this.SaveData() );
+					this.Close();
+				}
+		*/
 
-                contextMenu.MenuItems.Add( menuItem );
+		private async void buttonSave_Click( Object sender, EventArgs e ) => await Task.Run( () => this.SaveData() );
 
-                var relativeMousePosition = dataGridViewMain.PointToClient( Cursor.Position );
-                contextMenu.Show( dataGridViewMain, new Point( relativeMousePosition.X, relativeMousePosition.Y ) );
-            }
-        }
+		private void dataGridViewMain_CellContextMenuStripNeeded( Object sender, DataGridViewCellContextMenuStripNeededEventArgs e ) {
+			if ( e.ColumnIndex == -1 || e.RowIndex == -1 ) {
+				return;
+			}
+			var contextMenu = new ContextMenu();
+			var cell = this.dataGridViewMain[ e.ColumnIndex, e.RowIndex ];
 
-        private void dataGridViewMain_CellMouseDown( Object sender, DataGridViewCellMouseEventArgs e ) {
-            var cell = sender as DataGridView;
-            if ( null == cell ) {
-                return;
-            }
-            if ( e.ColumnIndex == -1 || e.RowIndex == -1 || e.Button != MouseButtons.Right ) {
-                return;
-            }
-            var c = cell[ e.ColumnIndex, e.RowIndex ];
-            if ( c.Selected ) {
-                return;
-            }
-            c.DataGridView.ClearSelection();
-            c.DataGridView.CurrentCell = c;
-            c.Selected = true;
-        }
+			if ( cell.ValueType == typeof(DateTime) ) {
+				var menuItem = new MenuItem( "Insert Now" );
+				menuItem.Click += ( o, args ) => cell.Value = DateTime.Now;
 
-        private void SitesEditor_FormClosed( Object sender, FormClosedEventArgs e ) {
-            var form = this.MainForm;
-            if ( form != null ) {
-                form.SitesEditor = null;
-            }
-        }
+				contextMenu.MenuItems.Add( menuItem );
 
-        private async void SitesEditor_Shown( Object sender, EventArgs e ) {
-            await Task.Run( () => this.LoadData() );
-        }
-    }
+				var relativeMousePosition = dataGridViewMain.PointToClient( Cursor.Position );
+				contextMenu.Show( dataGridViewMain, new Point( relativeMousePosition.X, relativeMousePosition.Y ) );
+			}
+		}
+
+		private void dataGridViewMain_CellMouseDown( Object sender, DataGridViewCellMouseEventArgs e ) {
+			var cell = sender as DataGridView;
+			if ( null == cell ) {
+				return;
+			}
+			if ( e.ColumnIndex == -1 || e.RowIndex == -1 || e.Button != MouseButtons.Right ) {
+				return;
+			}
+			var c = cell[ e.ColumnIndex, e.RowIndex ];
+			if ( c.Selected ) {
+				return;
+			}
+			c.DataGridView.ClearSelection();
+			c.DataGridView.CurrentCell = c;
+			c.Selected = true;
+		}
+
+		private void SitesEditor_FormClosed( Object sender, FormClosedEventArgs e ) {
+			var form = this.MainForm;
+			if ( form != null ) {
+				form.SitesEditor = null;
+			}
+		}
+
+		private async void SitesEditor_Shown( Object sender, EventArgs e ) => await Task.Run( () => this.LoadData() );
+
+	}
 }

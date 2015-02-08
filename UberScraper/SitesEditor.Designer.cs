@@ -24,48 +24,22 @@
         /// </summary>
         private void InitializeComponent() {
 			this.components = new System.ComponentModel.Container();
-			this.buttonDone = new System.Windows.Forms.Button();
-			this.buttonCancel = new System.Windows.Forms.Button();
 			this.dataGridViewMain = new System.Windows.Forms.DataGridView();
+			this.siteEditorDataTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
+			this.gvDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
+			this.gvDatabaseDataSet = new UberScraper.gvDatabaseDataSet();
+			this.buttonSave = new System.Windows.Forms.Button();
 			this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.userNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.passwordDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.addressDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.lastAttemptDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.siteEditorDataTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
-			this.gvDatabaseDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
-			this.gvDatabaseDataSet = new UberScraper.gvDatabaseDataSet();
-			this.labelStatus = new System.Windows.Forms.Label();
-			this.progressBarMain = new System.Windows.Forms.ProgressBar();
-			this.buttonSave = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.dataGridViewMain)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.siteEditorDataTableBindingSource)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSetBindingSource)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.gvDatabaseDataSet)).BeginInit();
 			this.SuspendLayout();
-			// 
-			// buttonDone
-			// 
-			this.buttonDone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDone.Location = new System.Drawing.Point(870, 341);
-			this.buttonDone.Name = "buttonDone";
-			this.buttonDone.Size = new System.Drawing.Size(52, 23);
-			this.buttonDone.TabIndex = 1;
-			this.buttonDone.Text = "Close";
-			this.buttonDone.UseVisualStyleBackColor = true;
-			this.buttonDone.Click += new System.EventHandler(this.buttonDone_Click);
-			// 
-			// buttonCancel
-			// 
-			this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonCancel.Location = new System.Drawing.Point(812, 341);
-			this.buttonCancel.Name = "buttonCancel";
-			this.buttonCancel.Size = new System.Drawing.Size(52, 23);
-			this.buttonCancel.TabIndex = 2;
-			this.buttonCancel.Text = "Cancel";
-			this.buttonCancel.UseVisualStyleBackColor = true;
-			this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
 			// 
 			// dataGridViewMain
 			// 
@@ -87,6 +61,32 @@
 			this.dataGridViewMain.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dataGridViewMain_CellContextMenuStripNeeded);
 			this.dataGridViewMain.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewMain_CellMouseDown);
 			// 
+			// siteEditorDataTableBindingSource
+			// 
+			this.siteEditorDataTableBindingSource.DataMember = "SiteEditorDataTable";
+			this.siteEditorDataTableBindingSource.DataSource = this.gvDatabaseDataSetBindingSource;
+			// 
+			// gvDatabaseDataSetBindingSource
+			// 
+			this.gvDatabaseDataSetBindingSource.DataSource = this.gvDatabaseDataSet;
+			this.gvDatabaseDataSetBindingSource.Position = 0;
+			// 
+			// gvDatabaseDataSet
+			// 
+			this.gvDatabaseDataSet.DataSetName = "gvDatabaseDataSet";
+			this.gvDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+			// 
+			// buttonSave
+			// 
+			this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonSave.Location = new System.Drawing.Point(861, 341);
+			this.buttonSave.Name = "buttonSave";
+			this.buttonSave.Size = new System.Drawing.Size(61, 23);
+			this.buttonSave.TabIndex = 5;
+			this.buttonSave.Text = "Save";
+			this.buttonSave.UseVisualStyleBackColor = true;
+			this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
+			// 
 			// dataGridViewTextBoxColumn1
 			// 
 			this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
@@ -106,7 +106,7 @@
 			// userNameDataGridViewTextBoxColumn
 			// 
 			this.userNameDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this.userNameDataGridViewTextBoxColumn.DataPropertyName = "User Name";
+			this.userNameDataGridViewTextBoxColumn.DataPropertyName = "UserName";
 			this.userNameDataGridViewTextBoxColumn.HeaderText = "User Name";
 			this.userNameDataGridViewTextBoxColumn.Name = "userNameDataGridViewTextBoxColumn";
 			this.userNameDataGridViewTextBoxColumn.Width = 85;
@@ -135,65 +135,18 @@
 			this.lastAttemptDataGridViewTextBoxColumn.Name = "lastAttemptDataGridViewTextBoxColumn";
 			this.lastAttemptDataGridViewTextBoxColumn.Width = 88;
 			// 
-			// siteEditorDataTableBindingSource
-			// 
-			this.siteEditorDataTableBindingSource.DataMember = "SiteEditorDataTable";
-			this.siteEditorDataTableBindingSource.DataSource = this.gvDatabaseDataSetBindingSource;
-			// 
-			// gvDatabaseDataSetBindingSource
-			// 
-			this.gvDatabaseDataSetBindingSource.DataSource = this.gvDatabaseDataSet;
-			this.gvDatabaseDataSetBindingSource.Position = 0;
-			// 
-			// gvDatabaseDataSet
-			// 
-			this.gvDatabaseDataSet.DataSetName = "gvDatabaseDataSet";
-			this.gvDatabaseDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
-			// 
-			// labelStatus
-			// 
-			this.labelStatus.Anchor = System.Windows.Forms.AnchorStyles.Left;
-			this.labelStatus.Location = new System.Drawing.Point(197, 341);
-			this.labelStatus.Name = "labelStatus";
-			this.labelStatus.Size = new System.Drawing.Size(551, 23);
-			this.labelStatus.TabIndex = 3;
-			this.labelStatus.Text = "Status";
-			this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// progressBarMain
-			// 
-			this.progressBarMain.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.progressBarMain.Location = new System.Drawing.Point(12, 341);
-			this.progressBarMain.Name = "progressBarMain";
-			this.progressBarMain.Size = new System.Drawing.Size(179, 23);
-			this.progressBarMain.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-			this.progressBarMain.TabIndex = 4;
-			// 
-			// buttonSave
-			// 
-			this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonSave.Location = new System.Drawing.Point(754, 341);
-			this.buttonSave.Name = "buttonSave";
-			this.buttonSave.Size = new System.Drawing.Size(52, 23);
-			this.buttonSave.TabIndex = 5;
-			this.buttonSave.Text = "Save";
-			this.buttonSave.UseVisualStyleBackColor = true;
-			this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-			// 
 			// SitesEditor
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.AutoScroll = true;
 			this.ClientSize = new System.Drawing.Size(934, 376);
+			this.ControlBox = false;
 			this.Controls.Add(this.dataGridViewMain);
 			this.Controls.Add(this.buttonSave);
-			this.Controls.Add(this.progressBarMain);
-			this.Controls.Add(this.labelStatus);
-			this.Controls.Add(this.buttonCancel);
-			this.Controls.Add(this.buttonDone);
 			this.DoubleBuffered = true;
 			this.Name = "SitesEditor";
+			this.ShowIcon = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Sites Editor";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SitesEditor_FormClosed);
@@ -209,20 +162,16 @@
         #endregion
 
         private System.Windows.Forms.DataGridView dataGridViewMain;
-        private System.Windows.Forms.Button buttonDone;
-        private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.Label labelStatus;
-        private System.Windows.Forms.ProgressBar progressBarMain;
         private System.Windows.Forms.BindingSource gvDatabaseDataSetBindingSource;
-        private gvDatabaseDataSet gvDatabaseDataSet;
         private System.Windows.Forms.BindingSource siteEditorDataTableBindingSource;
         private System.Windows.Forms.Button buttonSave;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        private System.Windows.Forms.DataGridViewTextBoxColumn userNameDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn passwordDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn addressDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn lastAttemptDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn nextAttemptDataGridViewTextBoxColumn;
-    }
+		public gvDatabaseDataSet gvDatabaseDataSet;
+		private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+		private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+		private System.Windows.Forms.DataGridViewTextBoxColumn userNameDataGridViewTextBoxColumn;
+		private System.Windows.Forms.DataGridViewTextBoxColumn passwordDataGridViewTextBoxColumn;
+		private System.Windows.Forms.DataGridViewTextBoxColumn addressDataGridViewTextBoxColumn;
+		private System.Windows.Forms.DataGridViewTextBoxColumn lastAttemptDataGridViewTextBoxColumn;
+	}
 }

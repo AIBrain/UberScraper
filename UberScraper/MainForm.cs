@@ -103,8 +103,8 @@ namespace UberScraper {
 		}
 
 		private void buttonSiteEditor_Click( Object sender, EventArgs e ) {
-			var sitesEditor = this.SitesEditor;
-			sitesEditor?.OnThread( () => sitesEditor.Show() );
+			//var sitesEditor = this.SitesEditor;
+			//sitesEditor?.OnThread( () => sitesEditor.Show() );
 		}
 	}
 }
