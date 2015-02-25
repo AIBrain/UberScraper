@@ -55,18 +55,21 @@ namespace UberScraper {
 			public String UserName;
 			public String Password;
 			public Uri Address;
-			public DateTime LastAttempt;
-			public DateTime IdealNextAttempt;
+			public DateTime? LastSuccess;
+			public DateTime? LastAttempt;
 		}
 
+        /// <summary>
+        /// Name, Wait, UserName, Password, Address, LastAttempt, IdealNextAttempt
+        /// </summary>
 		public IEnumerable<SiteData> Data => Enumerable.Select( this.gvDatabaseDataSet.Tables[ 0 ].AsEnumerable(), row => new SiteData {
 			Name = row.Field<String>( "Name" ),
 			Wait = row.Field<int>( "Wait" ),
 			UserName = row.Field<String>( "UserName" ),
 			Password = row.Field<String>( "Password" ),
 			Address = row.Field<Uri>( "Address" ),
+			LastSuccess = row.Field<DateTime>( "LastSuccess" ),
 			LastAttempt = row.Field<DateTime>( "LastAttempt" ),
-			IdealNextAttempt = row.Field<DateTime>( "LastAttempt" ) + new Minutes( row.Field<int>( "Wait" ) ),
 		} );
 
 		private readonly SemaphoreSlim _access = new SemaphoreSlim( initialCount: 1, maxCount: 1 );
