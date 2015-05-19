@@ -32,6 +32,7 @@ namespace UberScraper {
     using Awesomium.Windows.Forms;
     using JetBrains.Annotations;
     using Librainian.Collections;
+    using Librainian.Controls;
     using Librainian.Internet;
     using Librainian.Internet.Browser;
     using Librainian.IO;
@@ -45,10 +46,12 @@ namespace UberScraper {
     using Tesseract;
     using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
-    public class Uber : IDisposable {
-        [ CanBeNull ] private TesseractEngine _tesseractEngine;
+    public sealed class Uber : BetterDisposableClass {
 
-        public Uber( [ NotNull ] TabControl tabControls, [ NotNull ] PictureBox pictureBox, [ NotNull ] SitesEditor sitesEditor, [ NotNull ] SynchronizationContext context ) {
+        [CanBeNull]
+        private TesseractEngine _tesseractEngine;
+
+        public Uber( [NotNull] TabControl tabControls, [NotNull] PictureBox pictureBox, [NotNull] SitesEditor sitesEditor/*, [NotNull] SynchronizationContext context*/ ) {
             if ( tabControls == null ) {
                 throw new ArgumentNullException( nameof( tabControls ) );
             }
@@ -58,13 +61,14 @@ namespace UberScraper {
             if ( sitesEditor == null ) {
                 throw new ArgumentNullException( nameof( sitesEditor ) );
             }
-            if ( context == null ) {
-                throw new ArgumentNullException( nameof( context ) );
-            }
+            //if ( context == null ) {
+            //    throw new ArgumentNullException( nameof( context ) );
+            //}
+
             this.TabControls = tabControls;
             this.PictureBox = pictureBox;
             this.SitesEditor = sitesEditor;
-            this.Context = context;
+            //this.Context = context;
             this.NavigationTimeout = Seconds.Thirty;
 
             this.AutoDisposables.Push( this.Answers );
@@ -74,8 +78,7 @@ namespace UberScraper {
             this.RunningTask = Task.Run( () => this.Run() );
         }
 
-        [ NotNull ]
-        public SynchronizationContext Context { get; }
+        //[NotNull]public SynchronizationContext Context { get; }
 
         public TabControl TabControls { get; }
         public PictureBox PictureBox { get; }
@@ -88,22 +91,22 @@ namespace UberScraper {
 
         public Task RunningTask { get; }
 
-        [ NotNull ]
+        [NotNull]
         public SimpleCancel MainCancel { get; } = new SimpleCancel();
 
-        [ NotNull ]
-        private PersistTable< String, Captcha > CaptchaDatabase { get; } = new PersistTable< String, Captcha >( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
+        [NotNull]
+        private PersistTable<String, Captcha> CaptchaDatabase { get; } = new PersistTable<String, Captcha>( Environment.SpecialFolder.CommonApplicationData, "Captchas" );
 
-        [ NotNull ]
-        private PersistTable< String, WebSite > WebSites { get; } = new PersistTable< String, WebSite >( Environment.SpecialFolder.CommonApplicationData, "Websites" );
+        [NotNull]
+        private PersistTable<String, WebSite> WebSites { get; } = new PersistTable<String, WebSite>( Environment.SpecialFolder.CommonApplicationData, "Websites" );
 
-        [ NotNull ]
-        private PersistTable< String, String > Answers { get; } = new PersistTable< String, String >( Environment.SpecialFolder.CommonApplicationData, "Answers" );
+        [NotNull]
+        private PersistTable<String, String> Answers { get; } = new PersistTable<String, String>( Environment.SpecialFolder.CommonApplicationData, "Answers" );
 
         /// <summary>
         /// </summary>
         /// <exception cref="TesseractException"></exception>
-        [ NotNull ]
+        [NotNull]
         public TesseractEngine TesseractEngine {
             get {
                 if ( null != this._tesseractEngine ) {
@@ -115,25 +118,25 @@ namespace UberScraper {
                     this.AutoDisposables.Push( this._tesseractEngine );
                     return this._tesseractEngine;
                 }
-                catch ( TesseractException ) {
+                catch ( TesseractException) {
                     throw new TesseractException( "Unable to connect to tesseract engine." );
                 }
             }
         }
 
-        [ NotNull ]
-        private ConcurrentStack< IDisposable > AutoDisposables { get; } = new ConcurrentStack< IDisposable >();
+        [NotNull]
+        private ConcurrentStack<IDisposable> AutoDisposables { get; } = new ConcurrentStack<IDisposable>();
 
-        /// <summary>
-        ///     Performs application-defined tasks associated with freeing, releasing, or resetting
-        ///     unmanaged resources.
-        /// </summary>
-        public void Dispose() {
+        protected override void CleanUpManagedResources() {
             try {
                 Log.Enter();
 
-                foreach ( var disposable in this.AutoDisposables ) {
+                while ( this.AutoDisposables.Any() ) {
                     try {
+                        IDisposable disposable;
+                        if ( !this.AutoDisposables.TryPop( out disposable ) ) {
+                            continue;
+                        }
                         Console.Write( "Disposing of {0}...", disposable );
                         using ( disposable ) {
                             disposable.Dispose();
@@ -144,8 +147,13 @@ namespace UberScraper {
                         exception.More();
                     }
                 }
+
+                foreach ( var disposable in this.AutoDisposables ) {
+                    
+                }
             }
             finally {
+                base.CleanUpManagedResources();
                 Log.Exit();
             }
         }
@@ -163,24 +171,36 @@ namespace UberScraper {
                 }
             }
 
-            foreach ( var siteData in this.SitesEditor.Data ) {
-                
+            foreach ( var task in this.SitesEditor.Data.Select( site => Task.Run( () => this.SpinupWorker( site, this.PickBrowser( site.Address ) ) ) ) ) {
+                this.Workers.Add( task );
             }
-            
 
-            //todo create timers
-
-            //TODO	create timers and awesomewrappers based upon rows found in siteEditor
-
-            while ( Tasks.Any() ) {
-                Task.WaitAny( Tasks.ToArray(), Seconds.One  );
+            while ( this.Workers.Any() ) {
+                Task.WaitAny( this.Workers.ToArray(), Seconds.One );
                 Application.DoEvents();
             }
 
             Log.Exit();
         }
 
-        private ConcurrentList< Task > Tasks { get; } = new ConcurrentList< Task >();
+        private async void SpinupWorker( SitesEditor.SiteData site, AwesomiumWrapper browser ) {
+            String.Format( "Starting worker {0} ", site.Address.AbsoluteUri ).WriteLine();
+            // we know the site, and we're running inside a task... so: we no longer have access to any controls.
+            //todo create timers
+
+            //TODO	create timers and awesomewrappers based upon rows found in siteEditor
+            while ( !this.MainCancel.HaveAnyCancellationsBeenRequested() ) {
+                await Task.Delay( Seconds.One );    //be nice to the system.
+
+                if ( !site.LastSuccess.HasValue ) {
+                    //we haven't tried the site. go visit it.
+                }
+            }
+
+            String.Format( "Stopping worker {0} ", site.Address.AbsoluteUri ).WriteLine();
+        }
+
+        private ConcurrentList<Task> Workers { get; } = new ConcurrentList<Task>();
 
         public void RequestStop() {
             "Requesting cancel...".WriteLine();
@@ -194,22 +214,22 @@ namespace UberScraper {
                         continue;
                     }
                     webcontrol.Invoke( new Action( webcontrol.Stop ) );
-                    using ( webcontrol ) {
+                    using (webcontrol) {
                         tabPage.Tag = null;
                     }
                 }
             }
         }
 
-        public void EnsureWebsite( [ CanBeNull ] Uri uri ) {
+        public void EnsureWebsite( [CanBeNull] Uri uri ) {
             if ( null == uri ) {
                 return;
             }
 
             if ( null == this.WebSites[ uri.AbsoluteUri ] ) {
                 this.WebSites[ uri.AbsoluteUri ] = new WebSite {
-                                                                   Location = uri
-                                                               };
+                    Location = uri
+                };
             }
         }
 
@@ -227,38 +247,40 @@ namespace UberScraper {
         //    } );
         //}
 
-        /// <summary>
-        ///     <para>No guarantee that more ajax/javascript can and will fire off after this is 'true'.</para>
-        ///     <para>Internal while loop blocks.</para>
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        /// <seealso cref="http://answers.awesomium.com/questions/3971/loading-script-complete.html" />
-        public async Task< bool > Navigate( [ NotNull ] Uri url ) {
-            if ( null == url ) {
-                throw new ArgumentNullException( nameof( url ) );
-            }
+        /*
+                /// <summary>
+                ///     <para>No guarantee that more ajax/javascript can and will fire off after this is 'true'.</para>
+                ///     <para>Internal while loop blocks.</para>
+                /// </summary>
+                /// <param name="url"></param>
+                /// <returns></returns>
+                /// <seealso cref="http://answers.awesomium.com/questions/3971/loading-script-complete.html" />
+                public async Task<bool> Navigate( [NotNull] Uri url ) {
+                    if ( null == url ) {
+                        throw new ArgumentNullException( nameof( url ) );
+                    }
 
-            var bestBrowser = PickBestBrowser( url );
-            EnsureWebsite( url );
+                    var bestBrowser = PickBestBrowser( url );
+                    EnsureWebsite( url );
 
-            await bestBrowser.Navigate( url );
+                    await bestBrowser.Navigate( url );
 
-            return true;
-        }
+                    return true;
+                }
+        */
 
         /// <summary>
         /// </summary>
         /// <param name="uri"></param>
-        [ NotNull ]
-        public Captcha PullCaptchaData( [ NotNull ] Uri uri ) {
+        [NotNull]
+        public Captcha PullCaptchaData( [NotNull] Uri uri ) {
             if ( uri == null ) {
                 throw new ArgumentNullException( nameof( uri ) );
             }
 
             var captcha = this.CaptchaDatabase[ uri.AbsoluteUri ] ?? ( this.CaptchaDatabase[ uri.AbsoluteUri ] = new Captcha {
-                                                                                                                                 Uri = uri
-                                                                                                                             } );
+                Uri = uri
+            } );
 
             return captcha;
         }
@@ -267,7 +289,7 @@ namespace UberScraper {
         ///     <para>Gets and sets a <see cref="Captcha" /> .</para>
         /// </summary>
         /// <param name="captcha"></param>
-        public void PutCaptchaData( [ NotNull ] Captcha captcha ) {
+        public void PutCaptchaData( [NotNull] Captcha captcha ) {
             if ( captcha == null ) {
                 throw new ArgumentNullException( nameof( captcha ) );
             }
@@ -289,8 +311,13 @@ namespace UberScraper {
             //}
         }
 
-        [ NotNull ]
-        private AwesomiumWrapper PickBestBrowser( Uri uri ) {
+        [NotNull]
+        private AwesomiumWrapper PickBrowser( Uri uri ) {
+
+
+
+
+
             var host = uri.Host;
 
             foreach ( TabControl.TabPageCollection pages in this.TabControls.TabPages ) {
@@ -303,20 +330,29 @@ namespace UberScraper {
                     Uri pageuri;
                     if ( Uri.TryCreate( tag, UriKind.Absolute, out pageuri ) && pageuri.Host.Like( host ) ) {
                         //we found a match, return the browser
-                        return new AwesomiumWrapper( webControl: tabPage.Controls.OfType< WebControl >().First(), timeout: Minutes.One );
+                        return new AwesomiumWrapper( webControl: tabPage.Controls.OfType<WebControl>().First(), timeout: Minutes.One );
                     }
                 }
             }
 
-            var newTabPage = new TabPage( host );
+            TabPage newTabPage;
+            WebControl newBrowser = null;
 
-            var newBrowser = new WebControl();
-            newTabPage.Controls.Add( newBrowser );
-            newTabPage.Tag = uri;
+            this.TabControls.InvokeIfRequired( () => {
 
-            this.TabControls.Controls.Add( newTabPage );
+                newTabPage = new TabPage( host );
+
+                newBrowser = new WebControl();
+                newTabPage.Controls.Add( newBrowser );
+                newTabPage.Tag = uri;
+
+                this.TabControls.Controls.Add( newTabPage );
+
+            } );
 
             return new AwesomiumWrapper( newBrowser, Minutes.One );
+
+
         }
 
         //[NotNull]
@@ -377,8 +413,8 @@ namespace UberScraper {
 
             this.PictureBox.Load();
 
-            using ( var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew() ) {
-                using ( var page = tesseractEngine.Process( img, PageSegMode.SingleLine ) ) {
+            using (var img = Pix.LoadFromFile( document.FullPathWithFileName ).Deskew()) {
+                using (var page = tesseractEngine.Process( img, PageSegMode.SingleLine )) {
                     answer = page.GetText();
 
                     var paragraph = new Paragraph( answer );

@@ -22,26 +22,21 @@
 #endregion License & Information
 
 namespace UberScraper {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows.Forms;
+    using FluentAssertions;
+    using JetBrains.Annotations;
+    using Librainian.Controls;
+    using Librainian.Measurement.Time;
+    using Librainian.Threading;
+    using Properties;
 
-	using System;
-	using System.Threading;
-	using System.Threading.Tasks;
-	using System.Windows.Forms;
-	using FluentAssertions;
-	using JetBrains.Annotations;
-	using Librainian.Controls;
-	using Librainian.Measurement.Time;
-	using Librainian.Threading;
-	using Properties;
-
-	public partial class MainForm : Form {
+    public partial class MainForm : Form {
 
 		public MainForm() {
-			AwesomiumContext = SynchronizationContext.Current;
 			this.InitializeComponent();
 		}
-
-		public SynchronizationContext AwesomiumContext { get; }
 
 		[CanBeNull]
 		public Uber Uber { get; set; }
@@ -63,13 +58,12 @@ namespace UberScraper {
 			this.SitesEditor = new SitesEditor( this );
 			this.SitesEditor.OnThread( () => this.SitesEditor.Show() );
 
-			AwesomiumContext.Should().NotBeNull();
-
-			this.Uber = new Uber( this.tabControls, this.pictureBoxChallenge, this.SitesEditor, AwesomiumContext );
+			this.Uber = new Uber( this.tabControls, this.pictureBoxChallenge, this.SitesEditor );
 			this.Uber.Should().NotBeNull();
             if ( this.Uber == null ) {
 				throw new NullReferenceException( "this.Uber" );
 			}
+
 			this.buttonSiteEditor.Push();
 		}
 
@@ -90,9 +84,9 @@ namespace UberScraper {
 						uber.Dispose();
 					}
 				}
-				Console.WriteLine( "Resources disposed." );
+			    "Resources disposed.".WriteLine();
 #if DEBUG
-				Console.WriteLine();
+                Console.WriteLine();
 
 				//Console.WriteLine( "Press any key to exit" );
 				Task.Delay( Seconds.One ).Wait();
